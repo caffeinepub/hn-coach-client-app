@@ -85,13 +85,18 @@ export default function OnboardingWizard({
       toast.error("Please enter your full name");
       return;
     }
+    // Always save locally first so nothing is lost
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(ext));
+    // Try backend save but don't block on failure
     try {
       await saveProfile.mutateAsync(name.trim());
-      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(ext));
-      setStep(2);
-    } catch {
-      toast.error("Failed to save profile. Please try again.");
+    } catch (err) {
+      console.warn(
+        "Backend profile save failed, continuing with local save",
+        err,
+      );
     }
+    setStep(2);
   }
 
   function handleSaveGoals() {
