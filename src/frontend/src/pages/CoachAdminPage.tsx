@@ -11,14 +11,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Loader2, Megaphone, Plus, Users } from "lucide-react";
+import {
+  Calendar,
+  ImagePlus,
+  Loader2,
+  Megaphone,
+  Plus,
+  Trash2,
+  Users,
+  Video,
+  X,
+} from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { useBlobStorage } from "../hooks/useBlobStorage";
 import {
   useAllPromotions,
   useCreateClass,
   useCreatePromotion,
+  useDeleteClass,
+  useDeletePromotion,
   useUpcomingClasses,
 } from "../hooks/useQueries";
 
@@ -28,13 +41,24 @@ export default function CoachAdminPage() {
     description: "",
     date: "",
     capacity: "",
+    zoomLink: "",
   });
-  const [promoForm, setPromoForm] = useState({ title: "", body: "" });
+  const [promoForm, setPromoForm] = useState({
+    title: "",
+    body: "",
+    imageUrl: "",
+  });
+  const [promoImagePreview, setPromoImagePreview] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createClass = useCreateClass();
   const createPromo = useCreatePromotion();
+  const deleteClass = useDeleteClass();
+  const deletePromotion = useDeletePromotion();
   const { data: classes = [] } = useUpcomingClasses();
   const { data: promotions = [] } = useAllPromotions();
+  const { uploadFile, isUploading, uploadProgress } = useBlobStorage();
 
   const handleCreateClass = async () => {
     if (
@@ -52,12 +76,59 @@ export default function CoachAdminPage() {
         description: classForm.description,
         date: classForm.date,
         capacity: BigInt(classForm.capacity),
+        zoomLink: classForm.zoomLink.trim() || null,
       });
       toast.success("Class created successfully!");
-      setClassForm({ name: "", description: "", date: "", capacity: "" });
+      setClassForm({
+        name: "",
+        description: "",
+        date: "",
+        capacity: "",
+        zoomLink: "",
+      });
     } catch {
       toast.error("Failed to create class");
     }
+  };
+
+  const handleDeleteClass = async (id: bigint) => {
+    try {
+      await deleteClass.mutateAsync(id);
+      toast.success("Class deleted");
+    } catch {
+      toast.error("Failed to delete class");
+    }
+  };
+
+  const handleDeletePromotion = async (id: bigint) => {
+    try {
+      await deletePromotion.mutateAsync(id);
+      toast.success("Promotion deleted");
+    } catch {
+      toast.error("Failed to delete promotion");
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      const url = await uploadFile(file);
+      setPromoForm((p) => ({ ...p, imageUrl: url }));
+      setPromoImagePreview(URL.createObjectURL(file));
+      toast.success("Image uploaded!");
+    } catch {
+      toast.error("Failed to upload image");
+    }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+  };
+
+  const handleRemoveImage = () => {
+    setPromoForm((p) => ({ ...p, imageUrl: "" }));
+    setPromoImagePreview("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCreatePromo = async () => {
@@ -66,9 +137,15 @@ export default function CoachAdminPage() {
       return;
     }
     try {
-      await createPromo.mutateAsync(promoForm);
+      await createPromo.mutateAsync({
+        title: promoForm.title,
+        body: promoForm.body,
+        imageUrl: promoForm.imageUrl || null,
+      });
       toast.success("Promotion published!");
-      setPromoForm({ title: "", body: "" });
+      setPromoForm({ title: "", body: "", imageUrl: "" });
+      setPromoImagePreview("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
       toast.error("Failed to create promotion");
     }
@@ -163,6 +240,23 @@ export default function CoachAdminPage() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Video className="w-4 h-4 text-muted-foreground" />
+                  Zoom Link{" "}
+                  <span className="text-muted-foreground/60 text-xs font-normal">
+                    (optional)
+                  </span>
+                </Label>
+                <Input
+                  placeholder="https://zoom.us/j/..."
+                  value={classForm.zoomLink}
+                  onChange={(e) =>
+                    setClassForm((p) => ({ ...p, zoomLink: e.target.value }))
+                  }
+                  data-ocid="admin.class_zoom.input"
+                />
+              </div>
               <Button
                 className="w-full gap-2"
                 onClick={handleCreateClass}
@@ -210,10 +304,27 @@ export default function CoachAdminPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
+                          {cls.zoomLink && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs text-primary border-primary/30"
+                            >
+                              Zoom
+                            </Badge>
+                          )}
                           <Users className="w-3 h-3 text-muted-foreground" />
                           <Badge variant="secondary" className="text-xs">
                             {cls.enrolled.length}/{cls.capacity.toString()}
                           </Badge>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClass(cls.id)}
+                            disabled={deleteClass.isPending}
+                            data-ocid={`admin.class.delete_button.${i + 1}`}
+                            className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -267,13 +378,75 @@ export default function CoachAdminPage() {
                     setPromoForm((p) => ({ ...p, body: e.target.value }))
                   }
                   data-ocid="admin.promo_body.textarea"
-                  rows={5}
+                  rows={4}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                  Promo Image{" "}
+                  <span className="text-muted-foreground/60 text-xs font-normal">
+                    (optional)
+                  </span>
+                </Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageFileChange}
+                  data-ocid="admin.promo_image.upload_button"
+                />
+                {promoImagePreview ? (
+                  <div className="relative rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={promoImagePreview}
+                      alt="Preview"
+                      className="w-full object-cover"
+                      style={{ maxHeight: "180px" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors"
+                      data-ocid="admin.promo_image.delete_button"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full border-2 border-dashed border-border rounded-lg py-8 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-ocid="admin.promo_image.dropzone"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <span className="text-sm font-body">
+                          Uploading... {uploadProgress}%
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <ImagePlus className="w-6 h-6" />
+                        <span className="text-sm font-body">
+                          Click to upload an image
+                        </span>
+                        <span className="text-xs opacity-60">
+                          JPG, PNG, GIF up to 10MB
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               <Button
                 className="w-full gap-2"
                 onClick={handleCreatePromo}
-                disabled={createPromo.isPending}
+                disabled={createPromo.isPending || isUploading}
                 data-ocid="admin.create_promo.button"
               >
                 {createPromo.isPending ? (
@@ -305,15 +478,26 @@ export default function CoachAdminPage() {
                     {promotions.map((promo, i) => (
                       <div
                         key={promo.id.toString()}
-                        className="p-3 rounded-md bg-muted"
+                        className="flex items-start justify-between gap-2 p-3 rounded-md bg-muted"
                         data-ocid={`admin.promo.item.${i + 1}`}
                       >
-                        <p className="font-body font-semibold text-sm">
-                          {promo.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {promo.body}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-body font-semibold text-sm">
+                            {promo.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {promo.body}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePromotion(promo.id)}
+                          disabled={deletePromotion.isPending}
+                          data-ocid={`admin.promo.delete_button.${i + 1}`}
+                          className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>

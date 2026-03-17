@@ -26,24 +26,68 @@ export interface FitnessClassView {
   'date' : string,
   'name' : string,
   'description' : string,
+  'zoomLink' : [] | [string],
   'capacity' : bigint,
+}
+export interface MealLog {
+  'date' : string,
+  'note' : string,
+  'imageUrl' : [] | [string],
+  'mealType' : string,
 }
 export interface Promotion {
   'id' : bigint,
   'title' : string,
   'body' : string,
   'createdAt' : Time,
+  'imageUrl' : [] | [string],
 }
 export type Time = bigint;
 export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface WeightLogEntry {
+  'weight' : number,
+  'date' : string,
+  'absent' : boolean,
+}
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createClass' : ActorMethod<[string, string, string, bigint], bigint>,
-  'createPromotion' : ActorMethod<[string, string], bigint>,
+  'createClass' : ActorMethod<
+    [string, string, string, bigint, [] | [string]],
+    bigint
+  >,
+  'createPromotion' : ActorMethod<[string, string, [] | [string]], bigint>,
+  'deleteClass' : ActorMethod<[bigint], undefined>,
+  'deletePromotion' : ActorMethod<[bigint], undefined>,
   'enrollInClass' : ActorMethod<[bigint], undefined>,
   'getAllPromotions' : ActorMethod<[], Array<Promotion>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -53,19 +97,22 @@ export interface _SERVICE {
     [Principal],
     [] | [Array<BodyMeasurement>]
   >,
+  'getTodayMealLogs' : ActorMethod<[string], Array<MealLog>>,
   'getUpcomingClasses' : ActorMethod<[], Array<FitnessClassView>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
-  'getWeightLogs' : ActorMethod<
-    [Principal],
-    [] | [Array<{ 'weight' : number, 'date' : string }>]
-  >,
+  'getWeightLogs' : ActorMethod<[Principal], [] | [Array<WeightLogEntry>]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'logMeasurements' : ActorMethod<
     [string, number, number, number, number, number, number, number],
     undefined
   >,
   'logWeight' : ActorMethod<[string, number], undefined>,
+  'logWeightAbsent' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveMealLog' : ActorMethod<
+    [string, string, [] | [string], string],
+    undefined
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

@@ -1,6 +1,6 @@
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { UserRole } from "../backend";
+import type { UserRole, WeightLogEntry } from "../backend";
 import { useActor } from "./useActor";
 
 export function useUserRole() {
@@ -53,7 +53,7 @@ export function useSaveProfile() {
 
 export function useWeightLogs(principal: Principal | undefined) {
   const { actor, isFetching } = useActor();
-  return useQuery({
+  return useQuery<WeightLogEntry[]>({
     queryKey: ["weightLogs", principal?.toString()],
     queryFn: async () => {
       if (!actor || !principal) return [];
@@ -71,6 +71,18 @@ export function useLogWeight() {
     mutationFn: async ({ date, weight }: { date: string; weight: number }) => {
       if (!actor) throw new Error("No actor");
       return actor.logWeight(date, weight);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs"] }),
+  });
+}
+
+export function useLogWeightAbsent() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (date: string) => {
+      if (!actor) throw new Error("No actor");
+      return actor.logWeightAbsent(date);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs"] }),
   });
@@ -152,6 +164,7 @@ export function useCreateClass() {
       description: string;
       date: string;
       capacity: bigint;
+      zoomLink: string | null;
     }) => {
       if (!actor) throw new Error("No actor");
       return actor.createClass(
@@ -159,6 +172,7 @@ export function useCreateClass() {
         data.description,
         data.date,
         data.capacity,
+        data.zoomLink,
       );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["upcomingClasses"] }),
@@ -181,9 +195,43 @@ export function useCreatePromotion() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ title, body }: { title: string; body: string }) => {
+    mutationFn: async ({
+      title,
+      body,
+      imageUrl,
+    }: {
+      title: string;
+      body: string;
+      imageUrl: string | null;
+    }) => {
       if (!actor) throw new Error("No actor");
-      return actor.createPromotion(title, body);
+      return actor.createPromotion(title, body, imageUrl);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["promotions"] }),
+  });
+}
+
+export function useDeleteClass() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (classId: bigint) => {
+      if (!actor) throw new Error("No actor");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (actor as any).deleteClass(classId);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["upcomingClasses"] }),
+  });
+}
+
+export function useDeletePromotion() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (promotionId: bigint) => {
+      if (!actor) throw new Error("No actor");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (actor as any).deletePromotion(promotionId);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["promotions"] }),
   });

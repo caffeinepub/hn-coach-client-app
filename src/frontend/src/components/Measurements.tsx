@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Principal } from "@icp-sdk/core/principal";
-import { ChevronDown, Loader2, Plus, Ruler } from "lucide-react";
+import { CalendarCheck, ChevronDown, Loader2, Plus, Ruler } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,42 +20,72 @@ type MeasurementField = {
   label: string;
 };
 
+// Removed: leftBicep, rightBicep, leftThigh, rightThigh
 const FIELDS: MeasurementField[] = [
-  { key: "leftBicep", label: "Left Bicep" },
-  { key: "rightBicep", label: "Right Bicep" },
   { key: "chest", label: "Chest / Breast" },
   { key: "waist", label: "Waist" },
   { key: "hips", label: "Hips" },
-  { key: "leftThigh", label: "Left Thigh" },
-  { key: "rightThigh", label: "Right Thigh" },
 ];
 
 type FormValues = Record<keyof Omit<BodyMeasurement, "date">, string>;
 
-const emptyForm = (): FormValues =>
-  Object.fromEntries(FIELDS.map((f) => [f.key, ""])) as FormValues;
+const emptyForm = (): FormValues => ({
+  leftBicep: "0",
+  rightBicep: "0",
+  chest: "",
+  waist: "",
+  hips: "",
+  leftThigh: "0",
+  rightThigh: "0",
+});
+
+function getMostRecentSunday(): string {
+  const d = new Date();
+  const day = d.getDay(); // 0 = Sunday
+  d.setDate(d.getDate() - day);
+  return d.toISOString().split("T")[0];
+}
+
+function getNextSunday(thisSunday: string): string {
+  const d = new Date(thisSunday);
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().split("T")[0];
+}
 
 export default function Measurements({ principal }: MeasurementsProps) {
-  const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
   const [form, setForm] = useState<FormValues>(emptyForm());
   const [unit, setUnit] = useState<"cm" | "in">("cm");
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
+  const thisSunday = getMostRecentSunday();
+  const nextSunday = getNextSunday(thisSunday);
+
   const { data: logs = [], isLoading } = useMeasurementLogs(principal);
   const logMeasurements = useLogMeasurements();
 
-  const handleSubmit = async () => {
-    const parsed = Object.fromEntries(
-      FIELDS.map((f) => [f.key, Number.parseFloat(form[f.key])]),
-    ) as Record<keyof Omit<BodyMeasurement, "date">, number>;
+  const alreadyLoggedThisWeek = logs.some((l) => l.date === thisSunday);
 
-    if (Object.values(parsed).some((v) => Number.isNaN(v))) {
+  const handleSubmit = async () => {
+    const parsed = {
+      leftBicep: 0,
+      rightBicep: 0,
+      chest: Number.parseFloat(form.chest),
+      waist: Number.parseFloat(form.waist),
+      hips: Number.parseFloat(form.hips),
+      leftThigh: 0,
+      rightThigh: 0,
+    };
+
+    if (
+      Number.isNaN(parsed.chest) ||
+      Number.isNaN(parsed.waist) ||
+      Number.isNaN(parsed.hips)
+    ) {
       toast.error("Please fill in all measurement fields");
       return;
     }
     try {
-      await logMeasurements.mutateAsync({ date, ...parsed });
+      await logMeasurements.mutateAsync({ date: thisSunday, ...parsed });
       toast.success("Measurements logged!");
       setForm(emptyForm());
     } catch {
@@ -80,7 +110,7 @@ export default function Measurements({ principal }: MeasurementsProps) {
                   <Ruler className="w-5 h-5 text-primary" />
                 </div>
                 <CardTitle className="font-display text-xl">
-                  Log Measurements
+                  Weekly Check-in
                 </CardTitle>
               </div>
               <div className="flex rounded-md border border-border overflow-hidden">
@@ -99,51 +129,74 @@ export default function Measurements({ principal }: MeasurementsProps) {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <Input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                data-ocid="measurements.date.input"
-              />
+            {/* Weekly check-in info */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/10 border border-primary/20">
+              <CalendarCheck className="w-4 h-4 text-primary flex-shrink-0" />
+              <p className="text-xs font-body text-primary">
+                <span className="font-semibold">Sunday check-in:</span>{" "}
+                {thisSunday}
+              </p>
             </div>
-            <div className="grid grid-cols-1 gap-3">
-              {FIELDS.map((field) => (
-                <div key={field.key} className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">
-                    {field.label}{" "}
-                    <span className="text-primary/60">({unit})</span>
-                  </Label>
-                  <Input
-                    type="number"
-                    placeholder="0.0"
-                    step="0.1"
-                    value={form[field.key]}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, [field.key]: e.target.value }))
-                    }
-                    data-ocid={`measurements.${field.key}.input`}
-                  />
+
+            {alreadyLoggedThisWeek ? (
+              <div
+                className="flex flex-col items-center gap-3 py-8 text-center"
+                data-ocid="measurements.already_logged.success_state"
+              >
+                <CalendarCheck className="w-10 h-10 text-green-400" />
+                <p className="font-display font-semibold text-lg text-foreground">
+                  Already logged this week!
+                </p>
+                <p className="text-sm text-muted-foreground font-body">
+                  Next check-in:{" "}
+                  <span className="font-semibold text-primary">
+                    {nextSunday}
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-3">
+                  {FIELDS.map((field) => (
+                    <div key={field.key} className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        {field.label}{" "}
+                        <span className="text-primary/60">({unit})</span>
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder="0.0"
+                        step="0.1"
+                        value={form[field.key]}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            [field.key]: e.target.value,
+                          }))
+                        }
+                        data-ocid={`measurements.${field.key}.input`}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <Button
-              className="w-full gap-2 mt-2"
-              onClick={handleSubmit}
-              disabled={logMeasurements.isPending}
-              data-ocid="measurements.log.button"
-            >
-              {logMeasurements.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Logging...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" /> Log Measurements
-                </>
-              )}
-            </Button>
+                <Button
+                  className="w-full gap-2 mt-2"
+                  onClick={handleSubmit}
+                  disabled={logMeasurements.isPending}
+                  data-ocid="measurements.log.button"
+                >
+                  {logMeasurements.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Logging...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" /> Log Measurements
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -178,7 +231,7 @@ export default function Measurements({ principal }: MeasurementsProps) {
                   No measurement entries yet.
                 </p>
                 <p className="text-muted-foreground/60 text-sm font-body">
-                  Log your first measurements!
+                  Log your first measurements on Sunday!
                 </p>
               </div>
             ) : (
@@ -202,7 +255,7 @@ export default function Measurements({ principal }: MeasurementsProps) {
                       </span>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
-                          7 measurements
+                          3 measurements
                         </Badge>
                         <ChevronDown
                           className={`w-4 h-4 text-muted-foreground transition-transform ${expandedIdx === i ? "rotate-180" : ""}`}

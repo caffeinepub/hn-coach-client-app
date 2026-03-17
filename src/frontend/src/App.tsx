@@ -1,6 +1,9 @@
 import { Toaster } from "@/components/ui/sonner";
 import { useState } from "react";
 import Header from "./components/Header";
+import OnboardingWizard, {
+  isOnboardingDone,
+} from "./components/OnboardingWizard";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useIsAdmin } from "./hooks/useQueries";
 import AuthPage from "./pages/AuthPage";
@@ -13,6 +16,9 @@ export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
   const [view, setView] = useState<AppView>("dashboard");
   const { data: isAdmin } = useIsAdmin();
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean>(
+    isOnboardingDone(),
+  );
 
   if (isInitializing) {
     return (
@@ -32,7 +38,7 @@ export default function App() {
     return (
       <>
         <AuthPage />
-        <Toaster richColors theme="dark" />
+        <Toaster richColors theme="light" />
       </>
     );
   }
@@ -48,18 +54,14 @@ export default function App() {
         )}
       </main>
       <footer className="border-t border-border py-4 px-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()}. Built with{" "}
-        <span className="text-primary">♥</span> using{" "}
-        <a
-          href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline"
-        >
-          caffeine.ai
-        </a>
+        © {new Date().getFullYear()} HN Coach. All rights reserved.
       </footer>
-      <Toaster richColors theme="dark" />
+      <Toaster richColors theme="light" />
+
+      {/* Onboarding wizard — shown once after first login */}
+      {!onboardingComplete && identity && (
+        <OnboardingWizard onComplete={() => setOnboardingComplete(true)} />
+      )}
     </div>
   );
 }

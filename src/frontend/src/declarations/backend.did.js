@@ -8,6 +8,17 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  'method' : IDL.Text,
+  'blob_hash' : IDL.Text,
+});
+export const _CaffeineStorageRefillInformation = IDL.Record({
+  'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const _CaffeineStorageRefillResult = IDL.Record({
+  'success' : IDL.Opt(IDL.Bool),
+  'topped_up_amount' : IDL.Opt(IDL.Nat),
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -19,6 +30,7 @@ export const Promotion = IDL.Record({
   'title' : IDL.Text,
   'body' : IDL.Text,
   'createdAt' : Time,
+  'imageUrl' : IDL.Opt(IDL.Text),
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const FitnessClassView = IDL.Record({
@@ -27,6 +39,7 @@ export const FitnessClassView = IDL.Record({
   'date' : IDL.Text,
   'name' : IDL.Text,
   'description' : IDL.Text,
+  'zoomLink' : IDL.Opt(IDL.Text),
   'capacity' : IDL.Nat,
 });
 export const BodyMeasurement = IDL.Record({
@@ -39,16 +52,59 @@ export const BodyMeasurement = IDL.Record({
   'waist' : IDL.Float64,
   'leftBicep' : IDL.Float64,
 });
+export const MealLog = IDL.Record({
+  'date' : IDL.Text,
+  'note' : IDL.Text,
+  'imageUrl' : IDL.Opt(IDL.Text),
+  'mealType' : IDL.Text,
+});
+export const WeightLogEntry = IDL.Record({
+  'weight' : IDL.Float64,
+  'date' : IDL.Text,
+  'absent' : IDL.Bool,
+});
 
 export const idlService = IDL.Service({
+  '_caffeineStorageBlobIsLive' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Bool],
+      ['query'],
+    ),
+  '_caffeineStorageBlobsToDelete' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      ['query'],
+    ),
+  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [],
+      [],
+    ),
+  '_caffeineStorageCreateCertificate' : IDL.Func(
+      [IDL.Text],
+      [_CaffeineStorageCreateCertificateResult],
+      [],
+    ),
+  '_caffeineStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_CaffeineStorageRefillInformation)],
+      [_CaffeineStorageRefillResult],
+      [],
+    ),
+  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createClass' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Opt(IDL.Text)],
       [IDL.Nat],
       [],
     ),
-  'createPromotion' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat], []),
+  'createPromotion' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Nat],
+      [],
+    ),
+  'deleteClass' : IDL.Func([IDL.Nat], [], []),
+  'deletePromotion' : IDL.Func([IDL.Nat], [], []),
   'enrollInClass' : IDL.Func([IDL.Nat], [], []),
   'getAllPromotions' : IDL.Func([], [IDL.Vec(Promotion)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -59,6 +115,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(IDL.Vec(BodyMeasurement))],
       ['query'],
     ),
+  'getTodayMealLogs' : IDL.Func([IDL.Text], [IDL.Vec(MealLog)], ['query']),
   'getUpcomingClasses' : IDL.Func([], [IDL.Vec(FitnessClassView)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -67,11 +124,7 @@ export const idlService = IDL.Service({
     ),
   'getWeightLogs' : IDL.Func(
       [IDL.Principal],
-      [
-        IDL.Opt(
-          IDL.Vec(IDL.Record({ 'weight' : IDL.Float64, 'date' : IDL.Text }))
-        ),
-      ],
+      [IDL.Opt(IDL.Vec(WeightLogEntry))],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
@@ -90,12 +143,29 @@ export const idlService = IDL.Service({
       [],
     ),
   'logWeight' : IDL.Func([IDL.Text, IDL.Float64], [], []),
+  'logWeightAbsent' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveMealLog' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
+      [],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+    'method' : IDL.Text,
+    'blob_hash' : IDL.Text,
+  });
+  const _CaffeineStorageRefillInformation = IDL.Record({
+    'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const _CaffeineStorageRefillResult = IDL.Record({
+    'success' : IDL.Opt(IDL.Bool),
+    'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -107,6 +177,7 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'body' : IDL.Text,
     'createdAt' : Time,
+    'imageUrl' : IDL.Opt(IDL.Text),
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   const FitnessClassView = IDL.Record({
@@ -115,6 +186,7 @@ export const idlFactory = ({ IDL }) => {
     'date' : IDL.Text,
     'name' : IDL.Text,
     'description' : IDL.Text,
+    'zoomLink' : IDL.Opt(IDL.Text),
     'capacity' : IDL.Nat,
   });
   const BodyMeasurement = IDL.Record({
@@ -127,16 +199,59 @@ export const idlFactory = ({ IDL }) => {
     'waist' : IDL.Float64,
     'leftBicep' : IDL.Float64,
   });
+  const MealLog = IDL.Record({
+    'date' : IDL.Text,
+    'note' : IDL.Text,
+    'imageUrl' : IDL.Opt(IDL.Text),
+    'mealType' : IDL.Text,
+  });
+  const WeightLogEntry = IDL.Record({
+    'weight' : IDL.Float64,
+    'date' : IDL.Text,
+    'absent' : IDL.Bool,
+  });
   
   return IDL.Service({
+    '_caffeineStorageBlobIsLive' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Bool],
+        ['query'],
+      ),
+    '_caffeineStorageBlobsToDelete' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
+    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [],
+        [],
+      ),
+    '_caffeineStorageCreateCertificate' : IDL.Func(
+        [IDL.Text],
+        [_CaffeineStorageCreateCertificateResult],
+        [],
+      ),
+    '_caffeineStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_CaffeineStorageRefillInformation)],
+        [_CaffeineStorageRefillResult],
+        [],
+      ),
+    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createClass' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Opt(IDL.Text)],
         [IDL.Nat],
         [],
       ),
-    'createPromotion' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat], []),
+    'createPromotion' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Nat],
+        [],
+      ),
+    'deleteClass' : IDL.Func([IDL.Nat], [], []),
+    'deletePromotion' : IDL.Func([IDL.Nat], [], []),
     'enrollInClass' : IDL.Func([IDL.Nat], [], []),
     'getAllPromotions' : IDL.Func([], [IDL.Vec(Promotion)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -147,6 +262,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Vec(BodyMeasurement))],
         ['query'],
       ),
+    'getTodayMealLogs' : IDL.Func([IDL.Text], [IDL.Vec(MealLog)], ['query']),
     'getUpcomingClasses' : IDL.Func([], [IDL.Vec(FitnessClassView)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -155,11 +271,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getWeightLogs' : IDL.Func(
         [IDL.Principal],
-        [
-          IDL.Opt(
-            IDL.Vec(IDL.Record({ 'weight' : IDL.Float64, 'date' : IDL.Text }))
-          ),
-        ],
+        [IDL.Opt(IDL.Vec(WeightLogEntry))],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
@@ -178,7 +290,13 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'logWeight' : IDL.Func([IDL.Text, IDL.Float64], [], []),
+    'logWeightAbsent' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveMealLog' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
+        [],
+        [],
+      ),
   });
 };
 
