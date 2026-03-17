@@ -3,6 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, Save, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +24,7 @@ interface ExtProfile {
   weight: string;
   weightUnit: "kg" | "lbs";
   whatsapp: string;
+  gender: string;
 }
 
 const DEFAULT_EXT: ExtProfile = {
@@ -26,6 +34,7 @@ const DEFAULT_EXT: ExtProfile = {
   weight: "",
   weightUnit: "kg",
   whatsapp: "",
+  gender: "",
 };
 
 function loadExt(): ExtProfile {
@@ -105,7 +114,7 @@ export default function ProfileTab() {
                 {name || "Your Name"}
               </p>
               <p className="text-sm text-muted-foreground font-body">
-                HN Coach Client
+                {ext.gender ? `${ext.gender} · ` : ""}HN Coach Client
               </p>
             </div>
           </div>
@@ -136,6 +145,32 @@ export default function ProfileTab() {
               placeholder="Enter your full name"
               data-ocid="profile.name.input"
             />
+          </div>
+
+          {/* Gender */}
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-gender" className="font-body font-medium">
+              Gender
+            </Label>
+            <Select
+              value={ext.gender}
+              onValueChange={(val) => updateExt("gender", val)}
+            >
+              <SelectTrigger
+                id="profile-gender"
+                data-ocid="profile.gender.select"
+              >
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Male">Male</SelectItem>
+                <SelectItem value="Female">Female</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+                <SelectItem value="Prefer not to say">
+                  Prefer not to say
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Age */}

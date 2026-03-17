@@ -1,13 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, ImagePlus, Loader2, Save, Utensils } from "lucide-react";
+import { Camera, CheckCircle, Loader2, Save, Utensils, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useActor } from "../hooks/useActor";
-import { useBlobStorage } from "../hooks/useBlobStorage";
 
 interface MealItem {
   key: string;
@@ -55,8 +53,8 @@ const MEALS: MealItem[] = [
   },
   {
     key: "footsteps",
-    label: "Footsteps",
-    emoji: "👟",
+    label: "Footsteps Count",
+    emoji: "👣",
     color: "oklch(0.55 0.16 160)",
     lightBg: "oklch(0.97 0.02 160)",
   },
@@ -82,13 +80,11 @@ function getMealProgressColor(count: number): string {
 export default function MealCheckin() {
   const { actor, isFetching } = useActor();
   const qc = useQueryClient();
-  const { uploadFile, isUploading } = useBlobStorage();
 
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [images, setImages] = useState<Record<string, File | null>>({});
-  const [previews, setPreviews] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
-  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [mealImages, setMealImages] = useState<Record<string, string>>({});
+  const mealImageRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const { data: todayLogs = [], isLoading } = useQuery({
     queryKey: ["mealLogs", TODAY],
@@ -103,39 +99,43 @@ export default function MealCheckin() {
     mutationFn: async ({
       mealType,
       note,
-      imageUrl,
-    }: { mealType: string; note: string; imageUrl: string | null }) => {
+    }: { mealType: string; note: string }) => {
       if (!actor) throw new Error("No actor");
-      return actor.saveMealLog(mealType, note, imageUrl, TODAY);
+      return actor.saveMealLog(mealType, note, null, TODAY);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["mealLogs"] });
     },
   });
 
-  const handleImageChange = (key: string, file: File | null) => {
-    setImages((prev) => ({ ...prev, [key]: file }));
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviews((prev) => ({ ...prev, [key]: url }));
-    } else {
-      setPreviews((prev) => ({ ...prev, [key]: "" }));
+  const handleImageSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    mealKey: string,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image too large. Max 5MB.");
+      return;
     }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setMealImages((prev) => ({ ...prev, [mealKey]: dataUrl }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async (meal: MealItem) => {
+    if (!mealImages[meal.key]) {
+      toast.error(`📸 Please upload a photo for ${meal.label} first`);
+      return;
+    }
     setSavingKey(meal.key);
     try {
       const note = notes[meal.key] ?? "";
-      const imageFile = images[meal.key];
-      let imageUrl: string | null = null;
-      if (imageFile) {
-        imageUrl = await uploadFile(imageFile);
-      }
-      await saveMutation.mutateAsync({ mealType: meal.key, note, imageUrl });
+      await saveMutation.mutateAsync({ mealType: meal.key, note });
       toast.success(`${meal.emoji} ${meal.label} logged!`);
-      setImages((prev) => ({ ...prev, [meal.key]: null }));
-      setPreviews((prev) => ({ ...prev, [meal.key]: "" }));
       setNotes((prev) => ({ ...prev, [meal.key]: "" }));
     } catch {
       toast.error(`Failed to save ${meal.label}. Try again.`);
@@ -175,7 +175,7 @@ export default function MealCheckin() {
           Today's Meal Check-in
         </h2>
         <p className="text-muted-foreground font-body mt-1">
-          Log your meals, snacks, and daily footsteps for {TODAY} 🥗
+          Log your meals with photos for {TODAY} 📸
         </p>
       </div>
 
@@ -191,7 +191,6 @@ export default function MealCheckin() {
         }}
         data-ocid="meals.progress.card"
       >
-        {/* Gradient Header */}
         <div
           className="px-6 py-5 flex items-center gap-3"
           style={{
@@ -221,12 +220,10 @@ export default function MealCheckin() {
           </div>
         </div>
 
-        {/* Progress Body */}
         <div
           className="px-6 py-5 space-y-4"
           style={{ background: "oklch(0.99 0.01 70)" }}
         >
-          {/* Progress bar */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span
@@ -256,7 +253,6 @@ export default function MealCheckin() {
             </div>
           </div>
 
-          {/* Meal pills */}
           <div className="flex flex-wrap gap-2">
             {MEALS.map((meal) => {
               const logged = !!getLogForMeal(meal.key);
@@ -282,7 +278,6 @@ export default function MealCheckin() {
             })}
           </div>
 
-          {/* Motivation message */}
           <div
             className="rounded-xl px-4 py-3 flex items-center gap-3"
             style={{ background: `${progressColor.replace(")", " / 0.08)")}` }}
@@ -311,7 +306,7 @@ export default function MealCheckin() {
           const existingLog = getLogForMeal(meal.key);
           const isLogged = !!existingLog;
           const isSaving = savingKey === meal.key;
-          const preview = previews[meal.key];
+          const hasMealImage = !!mealImages[meal.key];
 
           return (
             <motion.div
@@ -330,7 +325,6 @@ export default function MealCheckin() {
                   boxShadow: "0 2px 12px oklch(0.15 0.02 260 / 0.05)",
                 }}
               >
-                {/* Card Header */}
                 <div
                   className="px-5 pt-5 pb-3 flex items-center justify-between"
                   style={{ background: meal.lightBg }}
@@ -359,22 +353,14 @@ export default function MealCheckin() {
                 </div>
 
                 <div className="p-5 flex-1 flex flex-col gap-4">
-                  {/* Show existing log if saved */}
                   {isLogged ? (
                     <div className="space-y-3">
-                      {existingLog.imageUrl && (
-                        <img
-                          src={existingLog.imageUrl}
-                          alt={meal.label}
-                          className="w-full h-36 object-cover rounded-lg"
-                        />
-                      )}
                       {existingLog.note && (
                         <p className="text-sm font-body text-muted-foreground leading-relaxed">
                           {existingLog.note}
                         </p>
                       )}
-                      {!existingLog.imageUrl && !existingLog.note && (
+                      {!existingLog.note && (
                         <p className="text-sm text-muted-foreground font-body italic">
                           No note added.
                         </p>
@@ -405,62 +391,72 @@ export default function MealCheckin() {
                     </div>
                   ) : (
                     <>
-                      {/* Image Upload */}
+                      {/* Image upload area */}
                       <div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          ref={(el) => {
-                            fileRefs.current[meal.key] = el;
-                          }}
-                          className="hidden"
-                          onChange={(e) =>
-                            handleImageChange(
-                              meal.key,
-                              e.target.files?.[0] ?? null,
-                            )
-                          }
-                          data-ocid={`meals.upload_button.${i + 1}`}
-                        />
-                        {preview ? (
+                        {hasMealImage ? (
                           <div className="relative">
                             <img
-                              src={preview}
-                              alt="Preview"
-                              className="w-full h-36 object-cover rounded-lg"
+                              src={mealImages[meal.key]}
+                              alt={meal.label}
+                              className="w-full h-32 object-cover rounded-xl border"
+                              style={{
+                                borderColor: `${meal.color.replace(")", " / 0.3)")}`,
+                              }}
                             />
                             <button
                               type="button"
-                              className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow"
-                              onClick={() => handleImageChange(meal.key, null)}
+                              onClick={() =>
+                                setMealImages((prev) => {
+                                  const next = { ...prev };
+                                  delete next[meal.key];
+                                  return next;
+                                })
+                              }
+                              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                              data-ocid={`meals.close_button.${i + 1}`}
                             >
-                              ✕
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ) : (
                           <button
                             type="button"
-                            className="w-full h-24 rounded-lg flex flex-col items-center justify-center gap-2 border-2 border-dashed transition-colors hover:opacity-80"
+                            onClick={() =>
+                              mealImageRefs.current[meal.key]?.click()
+                            }
+                            className="w-full border-2 border-dashed rounded-xl py-4 flex flex-col items-center gap-1.5 hover:opacity-80 transition-opacity"
                             style={{
-                              borderColor: `${meal.color}50`,
-                              background: meal.lightBg,
-                              color: meal.color,
+                              borderColor: `${meal.color.replace(")", " / 0.35)")}`,
                             }}
-                            onClick={() => fileRefs.current[meal.key]?.click()}
+                            data-ocid={`meals.upload_button.${i + 1}`}
                           >
-                            <ImagePlus className="w-5 h-5" />
-                            <span className="text-xs font-body font-medium">
-                              Upload photo
+                            <Camera
+                              className="w-5 h-5"
+                              style={{ color: meal.color }}
+                            />
+                            <span
+                              className="text-xs font-body font-semibold"
+                              style={{ color: meal.color }}
+                            >
+                              📸 Upload photo (required)
                             </span>
                           </button>
                         )}
+                        <input
+                          ref={(el) => {
+                            mealImageRefs.current[meal.key] = el;
+                          }}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleImageSelect(e, meal.key)}
+                        />
                       </div>
 
-                      {/* Note */}
                       <Textarea
                         placeholder={
                           meal.key === "footsteps"
-                            ? "How many steps today?"
+                            ? "Enter today's step count..."
                             : "Add a note..."
                         }
                         value={notes[meal.key] ?? ""}
@@ -470,23 +466,28 @@ export default function MealCheckin() {
                             [meal.key]: e.target.value.slice(0, 200),
                           }))
                         }
-                        className="resize-none text-sm font-body min-h-[72px]"
+                        className="resize-none text-sm font-body min-h-[80px]"
                         maxLength={200}
                         data-ocid={`meals.textarea.${i + 1}`}
                       />
 
-                      {/* Save Button */}
+                      {!hasMealImage && (
+                        <p
+                          className="text-xs font-body -mt-2"
+                          style={{ color: "oklch(0.55 0.2 25)" }}
+                        >
+                          📸 A photo is required to save
+                        </p>
+                      )}
+
                       <Button
-                        className="w-full gap-2 mt-auto"
+                        className="w-full gap-2 mt-auto disabled:opacity-50"
                         onClick={() => handleSave(meal)}
-                        disabled={isSaving || isUploading}
-                        style={{
-                          background: meal.color,
-                          color: "white",
-                        }}
+                        disabled={isSaving || !hasMealImage}
+                        style={{ background: meal.color, color: "white" }}
                         data-ocid={`meals.save_button.${i + 1}`}
                       >
-                        {isSaving || isUploading ? (
+                        {isSaving ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />{" "}
                             Saving...

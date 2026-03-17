@@ -90,6 +90,8 @@ export interface _SERVICE {
   'deletePromotion' : ActorMethod<[bigint], undefined>,
   'enrollInClass' : ActorMethod<[bigint], undefined>,
   'getAllPromotions' : ActorMethod<[], Array<Promotion>>,
+  'getAllUserMealLogs' : ActorMethod<[Principal, string], Array<MealLog>>,
+  'getAllUsers' : ActorMethod<[], Array<Principal>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getClass' : ActorMethod<[bigint], [] | [FitnessClassView]>,

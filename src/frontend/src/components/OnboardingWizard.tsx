@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ArrowRight,
   CheckCircle,
   Loader2,
@@ -33,6 +40,7 @@ interface ExtProfile {
   weight: string;
   weightUnit: "kg" | "lbs";
   whatsapp: string;
+  gender: string;
 }
 
 const DEFAULT_EXT: ExtProfile = {
@@ -42,6 +50,7 @@ const DEFAULT_EXT: ExtProfile = {
   weight: "",
   weightUnit: "kg",
   whatsapp: "",
+  gender: "",
 };
 
 interface OnboardingWizardProps {
@@ -85,9 +94,7 @@ export default function OnboardingWizard({
       toast.error("Please enter your full name");
       return;
     }
-    // Always save locally first so nothing is lost
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(ext));
-    // Try backend save but don't block on failure
     try {
       await saveProfile.mutateAsync(name.trim());
     } catch (err) {
@@ -148,75 +155,76 @@ export default function OnboardingWizard({
             style={{
               background:
                 "linear-gradient(135deg, oklch(0.97 0.02 80), oklch(0.95 0.04 65))",
-              borderBottom: "1px solid oklch(0.88 0.02 80)",
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                {[1, 2].map((s) => (
-                  <div key={s} className="flex items-center gap-1">
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-                      style={{
-                        background:
-                          s <= step
-                            ? "oklch(0.65 0.22 48)"
-                            : "oklch(0.88 0.01 80)",
-                        color: s <= step ? "white" : "oklch(0.55 0.01 80)",
-                      }}
-                    >
-                      {s < step ? <CheckCircle className="w-4 h-4" /> : s}
-                    </div>
-                    {s < 2 && (
-                      <div
-                        className="w-8 h-0.5 rounded"
-                        style={{
-                          background:
-                            step > s
-                              ? "oklch(0.65 0.22 48)"
-                              : "oklch(0.88 0.01 80)",
-                        }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <span className="text-xs font-body text-muted-foreground">
+              <span
+                className="text-xs font-body font-semibold px-2.5 py-1 rounded-full"
+                style={{
+                  background: "oklch(0.65 0.22 48 / 0.12)",
+                  color: "oklch(0.5 0.18 48)",
+                }}
+              >
                 Step {step} of 2
               </span>
+              <div className="flex gap-2">
+                {[1, 2].map((s) => (
+                  <div
+                    key={s}
+                    className="w-2 h-2 rounded-full transition-all"
+                    style={{
+                      background:
+                        s <= step
+                          ? "oklch(0.65 0.22 48)"
+                          : "oklch(0.88 0.01 80)",
+                      width: s === step ? "20px" : "8px",
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-            <Progress value={step === 1 ? 50 : 100} className="h-1.5 mb-4" />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: "oklch(0.65 0.22 48 / 0.12)" }}
-              >
-                {step === 1 ? (
+            <Progress value={step === 1 ? 50 : 100} className="h-1.5 mb-5" />
+            {step === 1 ? (
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: "oklch(0.65 0.22 48 / 0.15)" }}
+                >
                   <User
                     className="w-5 h-5"
                     style={{ color: "oklch(0.65 0.22 48)" }}
                   />
-                ) : (
+                </div>
+                <div>
+                  <h2 className="font-display font-bold text-xl text-foreground">
+                    Build your profile
+                  </h2>
+                  <p className="text-muted-foreground text-sm font-body">
+                    Tell us a bit about yourself
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: "oklch(0.65 0.22 48 / 0.15)" }}
+                >
                   <Target
                     className="w-5 h-5"
                     style={{ color: "oklch(0.65 0.22 48)" }}
                   />
-                )}
+                </div>
+                <div>
+                  <h2 className="font-display font-bold text-xl text-foreground">
+                    Set your goals
+                  </h2>
+                  <p className="text-muted-foreground text-sm font-body">
+                    What do you want to achieve?
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2
-                  className="font-display font-bold text-xl"
-                  style={{ color: "oklch(0.25 0.03 80)" }}
-                >
-                  {step === 1 ? "Complete Your Profile" : "Set Your Goals"}
-                </h2>
-                <p className="text-sm font-body text-muted-foreground">
-                  {step === 1
-                    ? "Tell us a little about yourself"
-                    : "Define your weight & measurement targets"}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Body */}
@@ -226,14 +234,14 @@ export default function OnboardingWizard({
                 {/* Avatar preview */}
                 <div className="flex justify-center mb-2">
                   <Avatar
-                    className="w-16 h-16 text-xl"
+                    className="w-16 h-16"
                     style={{ background: "oklch(0.65 0.22 48)" }}
                   >
                     <AvatarFallback
                       style={{
                         background: "oklch(0.65 0.22 48)",
                         color: "white",
-                        fontSize: "1.25rem",
+                        fontSize: "1.2rem",
                         fontWeight: 700,
                       }}
                     >
@@ -252,6 +260,27 @@ export default function OnboardingWizard({
                   />
                 </div>
 
+                {/* Gender */}
+                <div className="space-y-1.5">
+                  <Label className="font-body font-medium">Gender</Label>
+                  <Select
+                    value={ext.gender}
+                    onValueChange={(val) => updateExt("gender", val)}
+                  >
+                    <SelectTrigger data-ocid="onboarding.gender.select">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="Prefer not to say">
+                        Prefer not to say
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-1.5">
                   <Label className="font-body font-medium">Age</Label>
                   <Input
@@ -261,6 +290,7 @@ export default function OnboardingWizard({
                     value={ext.age}
                     onChange={(e) => updateExt("age", e.target.value)}
                     placeholder="e.g. 28"
+                    data-ocid="onboarding.age.input"
                   />
                 </div>
 
@@ -276,15 +306,13 @@ export default function OnboardingWizard({
                         ext.heightUnit === "cm" ? "e.g. 170" : "e.g. 5.7"
                       }
                       className="flex-1"
+                      data-ocid="onboarding.height.input"
                     />
-                    <div
-                      className="flex rounded-md border overflow-hidden"
-                      style={{ borderColor: "oklch(0.88 0.015 80)" }}
-                    >
+                    <div className="flex rounded-md border overflow-hidden">
                       {(["cm", "ft"] as const).map((u) => (
                         <button
-                          key={u}
                           type="button"
+                          key={u}
                           onClick={() => updateExt("heightUnit", u)}
                           className="px-3 py-2 text-sm font-body transition-colors"
                           style={
@@ -320,15 +348,13 @@ export default function OnboardingWizard({
                         ext.weightUnit === "kg" ? "e.g. 65" : "e.g. 143"
                       }
                       className="flex-1"
+                      data-ocid="onboarding.weight.input"
                     />
-                    <div
-                      className="flex rounded-md border overflow-hidden"
-                      style={{ borderColor: "oklch(0.88 0.015 80)" }}
-                    >
+                    <div className="flex rounded-md border overflow-hidden">
                       {(["kg", "lbs"] as const).map((u) => (
                         <button
-                          key={u}
                           type="button"
+                          key={u}
                           onClick={() => updateExt("weightUnit", u)}
                           className="px-3 py-2 text-sm font-body transition-colors"
                           style={
@@ -351,91 +377,84 @@ export default function OnboardingWizard({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="font-body font-medium">
-                    WhatsApp Contact
-                  </Label>
+                  <Label className="font-body font-medium">WhatsApp</Label>
                   <Input
                     type="tel"
                     value={ext.whatsapp}
                     onChange={(e) => updateExt("whatsapp", e.target.value)}
                     placeholder="e.g. +60123456789"
+                    data-ocid="onboarding.whatsapp.input"
                   />
                 </div>
               </>
             ) : (
               <>
-                {/* Weight Goal */}
                 <div
-                  className="rounded-xl p-4 space-y-3"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl mb-2"
                   style={{
-                    background: "oklch(0.97 0.015 80)",
-                    border: "1px solid oklch(0.9 0.01 80)",
+                    background: "oklch(0.65 0.22 48 / 0.08)",
+                    border: "1px solid oklch(0.65 0.22 48 / 0.2)",
                   }}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle
+                    className="w-4 h-4 shrink-0"
+                    style={{ color: "oklch(0.65 0.22 48)" }}
+                  />
+                  <p
+                    className="text-xs font-body"
+                    style={{ color: "oklch(0.45 0.15 48)" }}
+                  >
+                    Profile saved! Now set your targets.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="font-body font-medium flex items-center gap-2">
                     <Scale
                       className="w-4 h-4"
                       style={{ color: "oklch(0.65 0.22 48)" }}
                     />
-                    <span
-                      className="font-display font-semibold"
-                      style={{ color: "oklch(0.65 0.22 48)" }}
-                    >
-                      Weight Goal
-                    </span>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="font-body font-medium text-sm">
-                      Target Weight (kg)
-                    </Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={goals.targetWeight}
-                      onChange={(e) =>
-                        updateGoal("targetWeight", e.target.value)
-                      }
-                      placeholder="e.g. 60"
-                      data-ocid="onboarding.goals.weight.input"
-                    />
-                  </div>
+                    Target Weight (kg)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={goals.targetWeight}
+                    onChange={(e) => updateGoal("targetWeight", e.target.value)}
+                    placeholder="e.g. 60"
+                    data-ocid="onboarding.target_weight.input"
+                  />
                 </div>
 
-                {/* Measurement Goals */}
                 <div
-                  className="rounded-xl p-4 space-y-3"
-                  style={{
-                    background: "oklch(0.97 0.015 80)",
-                    border: "1px solid oklch(0.9 0.01 80)",
-                  }}
+                  className="pt-1 pb-1"
+                  style={{ borderTop: "1px solid oklch(0.92 0.01 80)" }}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <p
+                    className="text-xs font-body font-semibold mb-3"
+                    style={{ color: "oklch(0.5 0.18 280)" }}
+                  >
                     <Ruler
-                      className="w-4 h-4"
-                      style={{ color: "oklch(0.65 0.22 48)" }}
+                      className="w-3.5 h-3.5 inline mr-1"
+                      style={{ color: "oklch(0.5 0.18 280)" }}
                     />
-                    <span
-                      className="font-display font-semibold"
-                      style={{ color: "oklch(0.65 0.22 48)" }}
-                    >
-                      Measurement Goals (cm)
-                    </span>
+                    Measurement Goals
+                  </p>
+                  <div className="space-y-3">
+                    {measureFields.map((f) => (
+                      <div key={f.key} className="space-y-1">
+                        <Label className="text-xs font-body text-muted-foreground">
+                          {f.label}
+                        </Label>
+                        <Input
+                          type="number"
+                          value={goals[f.key]}
+                          onChange={(e) => updateGoal(f.key, e.target.value)}
+                          placeholder={f.placeholder}
+                          data-ocid={`onboarding.${f.key}_goal.input`}
+                        />
+                      </div>
+                    ))}
                   </div>
-                  {measureFields.map(({ key, label, placeholder }) => (
-                    <div key={key} className="space-y-1.5">
-                      <Label className="font-body font-medium text-sm">
-                        {label}
-                      </Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={goals[key]}
-                        onChange={(e) => updateGoal(key, e.target.value)}
-                        placeholder={placeholder}
-                        data-ocid={`onboarding.goals.${key}.input`}
-                      />
-                    </div>
-                  ))}
                 </div>
               </>
             )}
@@ -443,45 +462,53 @@ export default function OnboardingWizard({
 
           {/* Footer */}
           <div
-            className="px-8 py-5 flex gap-3"
-            style={{ borderTop: "1px solid oklch(0.92 0.01 80)" }}
+            className="px-8 pb-8 flex flex-col gap-2"
+            style={{ borderTop: "1px solid oklch(0.93 0.01 80)" }}
           >
+            <div className="h-4" />
             {step === 1 ? (
               <Button
                 onClick={handleSaveProfile}
-                disabled={saveProfile.isPending || !name.trim()}
-                className="flex-1 gap-2 font-body font-semibold"
-                style={{ background: "oklch(0.65 0.22 48)", color: "white" }}
+                disabled={saveProfile.isPending}
+                className="w-full h-11 font-display font-semibold gap-2"
+                style={{
+                  background:
+                    "linear-gradient(135deg, oklch(0.65 0.22 48), oklch(0.55 0.2 38))",
+                  color: "white",
+                }}
                 data-ocid="onboarding.next.button"
               >
                 {saveProfile.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Saving...
-                  </>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    Next: Set Goals <ArrowRight className="w-4 h-4" />
+                    Continue to Goals
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </Button>
             ) : (
               <>
                 <Button
-                  variant="outline"
+                  onClick={handleSaveGoals}
+                  className="w-full h-11 font-display font-semibold gap-2"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.65 0.22 48), oklch(0.55 0.2 38))",
+                    color: "white",
+                  }}
+                  data-ocid="onboarding.save_goals.button"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Save Goals & Get Started
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={handleSkipGoals}
-                  className="font-body"
+                  className="w-full text-muted-foreground"
                   data-ocid="onboarding.skip.button"
                 >
                   Skip for now
-                </Button>
-                <Button
-                  onClick={handleSaveGoals}
-                  className="flex-1 gap-2 font-body font-semibold"
-                  style={{ background: "oklch(0.65 0.22 48)", color: "white" }}
-                  data-ocid="onboarding.finish.button"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Finish Setup
                 </Button>
               </>
             )}

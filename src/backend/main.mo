@@ -8,11 +8,11 @@ import Time "mo:core/Time";
 import Order "mo:core/Order";
 import Text "mo:core/Text";
 
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
-
 
 
 actor {
@@ -93,7 +93,7 @@ actor {
   let promotions = Map.empty<Nat, Promotion>();
   let mealLogs = Map.empty<Principal, Map.Map<Text, Map.Map<Text, MealLog>>>();
 
-  // Counters for IDs
+  // Counter for IDs
   var nextClassId = 1;
   var nextPromotionId = 1;
 
@@ -311,6 +311,7 @@ actor {
   };
 
   // Query endpoints
+
   public query ({ caller }) func getWeightLogs(user : Principal) : async ?[WeightLogEntry] {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own weight logs");
@@ -360,5 +361,33 @@ actor {
   public query ({ caller }) func getAllPromotions() : async [Promotion] {
     let now = Time.now();
     promotions.values().toArray().filter(func(p) { p.createdAt <= now });
+  };
+
+  // Admin-only endpoints
+
+  // Get all users who have a profile
+  public query ({ caller }) func getAllUsers() : async [Principal] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view all users");
+    };
+
+    userProfiles.keys().toArray();
+  };
+
+  // Get all meal logs for a specific user and date (admin only)
+  public query ({ caller }) func getAllUserMealLogs(user : Principal, date : Text) : async [MealLog] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view all user meal logs");
+    };
+
+    switch (mealLogs.get(user)) {
+      case (null) { [] };
+      case (?userMeals) {
+        switch (userMeals.get(date)) {
+          case (null) { [] };
+          case (?dayToMeals) { dayToMeals.values().toArray() };
+        };
+      };
+    };
   };
 };

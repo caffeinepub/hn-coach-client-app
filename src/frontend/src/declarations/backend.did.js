@@ -32,6 +32,12 @@ export const Promotion = IDL.Record({
   'createdAt' : Time,
   'imageUrl' : IDL.Opt(IDL.Text),
 });
+export const MealLog = IDL.Record({
+  'date' : IDL.Text,
+  'note' : IDL.Text,
+  'imageUrl' : IDL.Opt(IDL.Text),
+  'mealType' : IDL.Text,
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const FitnessClassView = IDL.Record({
   'id' : IDL.Nat,
@@ -51,12 +57,6 @@ export const BodyMeasurement = IDL.Record({
   'rightBicep' : IDL.Float64,
   'waist' : IDL.Float64,
   'leftBicep' : IDL.Float64,
-});
-export const MealLog = IDL.Record({
-  'date' : IDL.Text,
-  'note' : IDL.Text,
-  'imageUrl' : IDL.Opt(IDL.Text),
-  'mealType' : IDL.Text,
 });
 export const WeightLogEntry = IDL.Record({
   'weight' : IDL.Float64,
@@ -107,6 +107,12 @@ export const idlService = IDL.Service({
   'deletePromotion' : IDL.Func([IDL.Nat], [], []),
   'enrollInClass' : IDL.Func([IDL.Nat], [], []),
   'getAllPromotions' : IDL.Func([], [IDL.Vec(Promotion)], ['query']),
+  'getAllUserMealLogs' : IDL.Func(
+      [IDL.Principal, IDL.Text],
+      [IDL.Vec(MealLog)],
+      ['query'],
+    ),
+  'getAllUsers' : IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getClass' : IDL.Func([IDL.Nat], [IDL.Opt(FitnessClassView)], ['query']),
@@ -179,6 +185,12 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : Time,
     'imageUrl' : IDL.Opt(IDL.Text),
   });
+  const MealLog = IDL.Record({
+    'date' : IDL.Text,
+    'note' : IDL.Text,
+    'imageUrl' : IDL.Opt(IDL.Text),
+    'mealType' : IDL.Text,
+  });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   const FitnessClassView = IDL.Record({
     'id' : IDL.Nat,
@@ -198,12 +210,6 @@ export const idlFactory = ({ IDL }) => {
     'rightBicep' : IDL.Float64,
     'waist' : IDL.Float64,
     'leftBicep' : IDL.Float64,
-  });
-  const MealLog = IDL.Record({
-    'date' : IDL.Text,
-    'note' : IDL.Text,
-    'imageUrl' : IDL.Opt(IDL.Text),
-    'mealType' : IDL.Text,
   });
   const WeightLogEntry = IDL.Record({
     'weight' : IDL.Float64,
@@ -254,6 +260,12 @@ export const idlFactory = ({ IDL }) => {
     'deletePromotion' : IDL.Func([IDL.Nat], [], []),
     'enrollInClass' : IDL.Func([IDL.Nat], [], []),
     'getAllPromotions' : IDL.Func([], [IDL.Vec(Promotion)], ['query']),
+    'getAllUserMealLogs' : IDL.Func(
+        [IDL.Principal, IDL.Text],
+        [IDL.Vec(MealLog)],
+        ['query'],
+      ),
+    'getAllUsers' : IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getClass' : IDL.Func([IDL.Nat], [IDL.Opt(FitnessClassView)], ['query']),

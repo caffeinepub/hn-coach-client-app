@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import type { Principal } from "@icp-sdk/core/principal";
-import { Ruler, Save, Scale, Target } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Camera, Ruler, Save, Scale, Target, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { BodyMeasurement } from "../backend";
 import { useMeasurementLogs, useWeightLogs } from "../hooks/useQueries";
@@ -49,6 +49,107 @@ interface GoalsTabProps {
 
 type MeasureKey = keyof Omit<BodyMeasurement, "date">;
 
+function PhotoUploadCard({
+  label,
+  storageKey,
+  ocidPrefix,
+  required = false,
+}: {
+  label: string;
+  storageKey: string;
+  ocidPrefix: string;
+  required?: boolean;
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(() =>
+    localStorage.getItem(storageKey),
+  );
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image too large. Max 5MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string;
+      setImageUrl(url);
+      localStorage.setItem(storageKey, url);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemove() {
+    setImageUrl(null);
+    localStorage.removeItem(storageKey);
+  }
+
+  return (
+    <div
+      className="flex flex-col items-center gap-2 p-3 rounded-xl"
+      style={{
+        background: "oklch(0.97 0.01 70)",
+        border: "1px solid oklch(0.88 0.015 80)",
+      }}
+    >
+      <p className="text-xs font-body font-semibold text-foreground">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </p>
+      {imageUrl ? (
+        <div className="relative">
+          <img
+            src={imageUrl}
+            alt={label}
+            className="w-24 h-32 object-cover rounded-lg border-2"
+            style={{ borderColor: "oklch(0.65 0.22 48 / 0.4)" }}
+          />
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-black/70 text-white hover:bg-black/90"
+            data-ocid={`${ocidPrefix}.delete_button`}
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="w-24 h-32 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed hover:opacity-80 transition-opacity"
+          style={{
+            borderColor: required
+              ? "oklch(0.55 0.2 25)"
+              : "oklch(0.65 0.22 48 / 0.4)",
+          }}
+          data-ocid={`${ocidPrefix}.upload_button`}
+        >
+          <Camera
+            className="w-6 h-6"
+            style={{ color: "oklch(0.65 0.22 48)" }}
+          />
+          <span
+            className="text-xs font-body text-center"
+            style={{ color: "oklch(0.55 0.1 48)" }}
+          >
+            Tap to upload
+          </span>
+        </button>
+      )}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFile}
+      />
+    </div>
+  );
+}
+
 export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
   const [goals, setGoals] = useState<Goals>(loadGoals);
   const { data: weightLogs } = useWeightLogs(principal);
@@ -67,7 +168,17 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
     setGoals((prev) => ({ ...prev, [field]: value }));
   }
 
+  const principalStr = principal.toString();
+
   function handleSave() {
+    const frontKey = `hn_goals_front_${principalStr}`;
+    const sideKey = `hn_goals_side_${principalStr}`;
+    if (!localStorage.getItem(frontKey) || !localStorage.getItem(sideKey)) {
+      toast.error(
+        "Please upload both Front View and Side View progress photos to save your goals",
+      );
+      return;
+    }
     localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals));
     toast.success("Goals saved! Keep pushing! 🎯");
     onSaved?.();
@@ -92,6 +203,38 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
 
   return (
     <div className="max-w-xl mx-auto space-y-6">
+      {/* Progress Photos */}
+      <Card style={{ border: "1px solid oklch(0.88 0.015 80)" }}>
+        <CardHeader>
+          <CardTitle
+            className="flex items-center gap-2 font-display"
+            style={{ color: "oklch(0.65 0.22 48)" }}
+          >
+            <Camera className="w-5 h-5" />
+            Progress Photos
+          </CardTitle>
+          <p className="text-xs text-muted-foreground font-body">
+            Upload your front and side view photos to track your visual progress
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <PhotoUploadCard
+              label="Front View"
+              storageKey={`hn_goals_front_${principalStr}`}
+              ocidPrefix="goals.front_view"
+              required
+            />
+            <PhotoUploadCard
+              label="Side View"
+              storageKey={`hn_goals_side_${principalStr}`}
+              ocidPrefix="goals.side_view"
+              required
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Weight Goal */}
       <Card style={{ border: "1px solid oklch(0.88 0.015 80)" }}>
         <CardHeader>

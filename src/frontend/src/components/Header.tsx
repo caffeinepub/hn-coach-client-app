@@ -1,19 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { Dumbbell, LayoutDashboard, LogOut, Shield } from "lucide-react";
-import type { AppView } from "../App";
+import { LayoutDashboard, LogOut, UserCircle } from "lucide-react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useUserProfile } from "../hooks/useQueries";
 
 interface HeaderProps {
-  isAdmin: boolean;
-  currentView: AppView;
-  onViewChange: (view: AppView) => void;
+  onProfileClick: () => void;
+  onGoalsClick: () => void;
+  onDashboardClick: () => void;
 }
 
 export default function Header({
-  isAdmin,
-  currentView,
-  onViewChange,
+  onProfileClick,
+  onGoalsClick,
+  onDashboardClick,
 }: HeaderProps) {
   const { clear } = useInternetIdentity();
   const { data: profile } = useUserProfile();
@@ -21,57 +20,69 @@ export default function Header({
   return (
     <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* Animated logo ring */}
-          <div className="relative">
-            <div className="absolute inset-0 rounded-xl animate-pulse-glow opacity-70" />
-            <div className="relative w-10 h-10 rounded-xl gradient-fire flex items-center justify-center">
-              <Dumbbell className="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <div>
-            <span className="font-display font-extrabold text-2xl tracking-tight text-foreground">
-              HN{" "}
-              <span className="gradient-fire-text glow-text-intense">
-                Coach
-              </span>
-            </span>
-          </div>
-        </div>
+        {/* Logo */}
+        <button
+          type="button"
+          className="flex items-center gap-2 cursor-pointer bg-transparent border-none p-0"
+          onClick={onDashboardClick}
+          data-ocid="nav.home.link"
+        >
+          <img
+            src="/assets/uploads/file_00000000a43071fa8c0038574783daf9-1.png"
+            alt="HN Coach"
+            className="h-10 w-10 object-contain rounded-xl"
+          />
+          <span className="font-display font-extrabold text-xl tracking-tight text-foreground hidden sm:block">
+            HN <span className="gradient-fire-text">Coach</span>
+          </span>
+        </button>
 
-        <nav className="flex items-center gap-2">
+        <nav className="flex items-center gap-1">
+          {/* Goals BEFORE Dashboard */}
           <Button
-            variant={currentView === "dashboard" ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
-            onClick={() => onViewChange("dashboard")}
+            onClick={onGoalsClick}
+            title="My Goals"
+            data-ocid="nav.goals.button"
+            className="gap-1.5 font-body text-sm hover:text-primary"
+          >
+            <span className="text-base">🎯</span>
+            <span className="hidden sm:inline">Goals</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDashboardClick}
             data-ocid="nav.dashboard.link"
-            className={`gap-2 ${currentView === "dashboard" ? "glow-orange" : ""}`}
+            className="gap-2"
           >
             <LayoutDashboard className="w-4 h-4" />
             <span className="hidden sm:inline">Dashboard</span>
           </Button>
 
-          {isAdmin && (
-            <Button
-              variant={currentView === "admin" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onViewChange("admin")}
-              data-ocid="nav.admin.link"
-              className={`gap-2 ${currentView === "admin" ? "glow-orange" : ""}`}
-            >
-              <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">Coach Panel</span>
-            </Button>
-          )}
-
           <div className="w-px h-6 bg-border mx-1" />
 
-          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="w-8 h-8 rounded-full gradient-fire flex items-center justify-center text-xs font-display font-bold text-white">
-              {profile?.name?.charAt(0)?.toUpperCase() ?? "U"}
-            </div>
-            <span className="font-body">{profile?.name ?? "Member"}</span>
-          </div>
+          {/* Profile button - highlighted */}
+          <Button
+            size="sm"
+            onClick={onProfileClick}
+            data-ocid="nav.profile.button"
+            className="gap-2 font-body text-sm"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.65 0.22 48), oklch(0.58 0.2 38))",
+              color: "white",
+              borderRadius: "20px",
+              padding: "0 14px",
+            }}
+          >
+            <UserCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {profile?.name ?? "Profile"}
+            </span>
+          </Button>
 
           <Button
             variant="ghost"
@@ -85,7 +96,6 @@ export default function Header({
           </Button>
         </nav>
       </div>
-      {/* Animated gradient border at bottom */}
       <div className="header-gradient-border" />
     </header>
   );

@@ -5,7 +5,6 @@ import OnboardingWizard, {
   isOnboardingDone,
 } from "./components/OnboardingWizard";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
-import { useIsAdmin } from "./hooks/useQueries";
 import AuthPage from "./pages/AuthPage";
 import CoachAdminPage from "./pages/CoachAdminPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -14,11 +13,18 @@ export type AppView = "dashboard" | "admin";
 
 export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
-  const [view, setView] = useState<AppView>("dashboard");
-  const { data: isAdmin } = useIsAdmin();
+  const [view, setView] = useState<AppView>(() =>
+    window.location.hash === "#admin" ? "admin" : "dashboard",
+  );
   const [onboardingComplete, setOnboardingComplete] = useState<boolean>(
     isOnboardingDone(),
   );
+  const [dashboardTab, setDashboardTab] = useState<string>("home");
+
+  const handleViewChange = (newView: AppView) => {
+    setView(newView);
+    window.location.hash = newView === "admin" ? "#admin" : "";
+  };
 
   if (isInitializing) {
     return (
@@ -43,22 +49,60 @@ export default function App() {
     );
   }
 
+  // Admin panel — no header shown, full-page experience
+  if (view === "admin") {
+    return (
+      <>
+        <CoachAdminPage onBackToApp={() => handleViewChange("dashboard")} />
+        <Toaster richColors theme="light" />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header isAdmin={!!isAdmin} currentView={view} onViewChange={setView} />
-      <main className="flex-1">
-        {view === "admin" && isAdmin ? (
-          <CoachAdminPage />
-        ) : (
-          <DashboardPage principal={identity.getPrincipal()} />
-        )}
+      <Header
+        onProfileClick={() => {
+          handleViewChange("dashboard");
+          setDashboardTab("profile");
+        }}
+        onGoalsClick={() => {
+          handleViewChange("dashboard");
+          setDashboardTab("goals");
+        }}
+        onDashboardClick={() => handleViewChange("dashboard")}
+      />
+      <main className="flex-1 pb-8">
+        <DashboardPage
+          principal={identity.getPrincipal()}
+          activeTab={dashboardTab}
+          onTabChange={setDashboardTab}
+        />
       </main>
-      <footer className="border-t border-border py-4 px-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} HN Coach. All rights reserved.
-      </footer>
       <Toaster richColors theme="light" />
 
-      {/* Onboarding wizard — shown once after first login */}
+      {/* Watermark footer */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center"
+        style={{
+          height: "22px",
+          background: "oklch(0.12 0.01 260)",
+          borderTop: "1px solid oklch(0.25 0.02 260)",
+        }}
+        data-ocid="app.watermark.panel"
+      >
+        <p
+          className="text-center font-body"
+          style={{
+            fontSize: "10px",
+            color: "oklch(0.65 0.01 260)",
+            letterSpacing: "0.04em",
+          }}
+        >
+          © {new Date().getFullYear()} HN Coach — All Rights Reserved
+        </p>
+      </div>
+
       {!onboardingComplete && identity && (
         <OnboardingWizard onComplete={() => setOnboardingComplete(true)} />
       )}

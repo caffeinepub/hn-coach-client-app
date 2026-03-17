@@ -61,6 +61,8 @@ export interface backendInterface {
     deletePromotion(promotionId: bigint): Promise<void>;
     enrollInClass(classId: bigint): Promise<void>;
     getAllPromotions(): Promise<Array<Promotion>>;
+    getAllUserMealLogs(user: Principal, date: string): Promise<Array<MealLog>>;
+    getAllUsers(): Promise<Array<Principal>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getClass(classId: bigint): Promise<FitnessClassView | null>;
