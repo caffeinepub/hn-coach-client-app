@@ -1,27 +1,29 @@
 # HN Coach Client App
 
 ## Current State
-Full-stack health/fitness tracking app with React frontend. Orange/navy theme throughout. HomeDashboard has: daily quote at top, promotions/classes slideshow, weight log, nutrition tip panel, meals check-in, weekly check-in (measurements), weekly meal summary, and right-side panel with nutrition + motivation cards. Login page (AuthPage) uses orange accents with fitness illustration.
+The app has a lavender/white/black theme with 3D card effects. The dashboard homepage has:
+- A daily motivation card at the top (showing a quote + date line)
+- An HN Points card with dark background (oklch ~0.2)
+- A collapsible Milestone Reward Chart with dark background (oklch ~0.18)
+- Goals icon rendered as just `🎯` in the Header nav button
 
 ## Requested Changes (Diff)
 
 ### Add
-- Nothing new to add
+- Welcome [username] text in the motivation card date/subtitle area (alongside date)
 
 ### Modify
-- **Theme**: Replace all orange accents (#f97316, orange-*, amber-*) with forest green (#2D6A4F and variants: light #52B788, dark #1B4332, accent #40916C). White backgrounds, black/dark gray text. Active tab highlight, buttons, badges, gradients, borders — all switch to forest green palette. Professional, clean, minimal.
-- **Login page (AuthPage)**: Update to forest green theme — replace orange "HN" highlight and all orange accents with forest green. Keep illustration and compact layout.
-- **Daily Motivation card placement**: Move the MotivationPanel / daily motivation card from its current position to just ABOVE the Weekly Meal Summary section inside HomeDashboard.
-- **index.css**: Update CSS custom properties and any hardcoded orange colors to forest green equivalents.
-- All components that use orange/amber Tailwind classes should switch to green equivalents.
+- HN Points card background: change from dark (oklch(0.2 0.04 260) gradient) to lavender (oklch(0.92 0.06 290) or similar light lavender)
+- Milestone Reward Chart collapsible card background: change from dark (oklch(0.18 0.04 260) gradient) to lavender
+- Goals nav button in Header: change label from `Goals` to `My Goals`, keep 🎯 emoji
+- Daily motivation card date line: prepend `Welcome, [username]!` — fetch username via `useUserProfile()` hook (already available). Show as "Welcome, [Name] · [date]" or two lines.
 
 ### Remove
-- Nothing to remove
+- Nothing removed
 
 ## Implementation Plan
-1. Update `index.css` — change CSS variables and any hardcoded orange to forest green palette (--primary, --accent, etc.)
-2. Update `HomeDashboard.tsx` — move MotivationPanel component to just above the Weekly Meal Summary section; replace all orange/amber Tailwind classes with green equivalents
-3. Update `AuthPage.tsx` — replace orange styling with forest green; keep "HN" highlighted but in green
-4. Update `Header.tsx` — replace orange pill/gradient with forest green
-5. Update `MealCheckin.tsx`, `WeightLog.tsx`, `Measurements.tsx`, `Promotions.tsx`, `Classes.tsx`, `NutritionPanel.tsx`, `MotivationPanel.tsx`, `ProfileTab.tsx`, `GoalsTab.tsx`, `CoachAdminPage.tsx` — replace orange/amber classes with forest green equivalents
-6. Validate and fix any build errors
+1. In `HomeDashboard.tsx`: import and use `useUserProfile` hook to get profile name
+2. In daily motivation card date area: show `Welcome, [name]!` above or alongside the date
+3. In HN Points card: replace dark gradient background with light lavender gradient (e.g. oklch(0.93 0.07 290) to oklch(0.88 0.09 290)). Update text colors for contrast on light background.
+4. In Milestone Reward Chart collapsible card: same lavender background treatment, update text colors.
+5. In `Header.tsx`: update Goals button label from `Goals` to `My Goals`

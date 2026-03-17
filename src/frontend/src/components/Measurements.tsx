@@ -111,8 +111,8 @@ function MeasurePhotoCard({
     <div
       className="flex flex-col items-center gap-2 p-3 rounded-xl"
       style={{
-        background: "oklch(0.97 0.01 70)",
-        border: "1px solid oklch(0.88 0.015 80)",
+        background: "oklch(0.97 0.03 290)",
+        border: "1px solid oklch(0.88 0.04 290)",
       }}
     >
       <p className="text-xs font-body font-semibold text-foreground">
@@ -125,7 +125,7 @@ function MeasurePhotoCard({
             src={imageUrl}
             alt={label}
             className="w-20 h-28 object-cover rounded-lg border-2"
-            style={{ borderColor: "oklch(0.45 0.12 152 / 0.4)" }}
+            style={{ borderColor: "oklch(0.68 0.16 290 / 0.4)" }}
           />
           <button
             type="button"
@@ -143,18 +143,18 @@ function MeasurePhotoCard({
           className="w-20 h-28 flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed hover:opacity-80 transition-opacity"
           style={{
             borderColor: required
-              ? "oklch(0.55 0.12 152)"
-              : "oklch(0.45 0.12 152 / 0.4)",
+              ? "oklch(0.65 0.16 290)"
+              : "oklch(0.68 0.16 290 / 0.4)",
           }}
           data-ocid={`${ocidPrefix}.upload_button`}
         >
           <Camera
             className="w-5 h-5"
-            style={{ color: "oklch(0.45 0.12 152)" }}
+            style={{ color: "oklch(0.68 0.16 290)" }}
           />
           <span
             className="text-xs font-body text-center leading-tight"
-            style={{ color: "oklch(0.42 0.11 152)" }}
+            style={{ color: "oklch(0.62 0.14 290)" }}
           >
             Tap to upload
           </span>
@@ -187,8 +187,8 @@ function MiniChart({
       <div
         className="flex flex-col items-center justify-center rounded-xl p-4 text-center"
         style={{
-          background: "oklch(0.97 0.01 70)",
-          border: "1px solid oklch(0.88 0.015 80)",
+          background: "oklch(0.97 0.03 290)",
+          border: "1px solid oklch(0.88 0.04 290)",
           height: 130,
         }}
       >
@@ -206,8 +206,8 @@ function MiniChart({
     <div
       className="rounded-xl p-3"
       style={{
-        background: "oklch(0.97 0.01 70)",
-        border: "1px solid oklch(0.88 0.015 80)",
+        background: "oklch(0.97 0.03 290)",
+        border: "1px solid oklch(0.88 0.04 290)",
       }}
     >
       <p className="text-xs font-body font-semibold text-foreground mb-2">
@@ -342,8 +342,8 @@ export default function Measurements({ principal }: MeasurementsProps) {
         className="rounded-2xl overflow-hidden"
         style={{
           background:
-            "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.38 0.1 152), oklch(0.5 0.12 152))",
-          boxShadow: "0 6px 28px oklch(0.45 0.12 152 / 0.35)",
+            "linear-gradient(135deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290), oklch(0.62 0.16 290))",
+          boxShadow: "0 6px 28px oklch(0.68 0.16 290 / 0.35)",
         }}
         data-ocid="measurements.weekly_checkin.card"
       >
@@ -446,11 +446,11 @@ export default function Measurements({ principal }: MeasurementsProps) {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span
                         className="w-2 h-2 rounded-full animate-pulse"
-                        style={{ background: "oklch(0.45 0.12 152)" }}
+                        style={{ background: "oklch(0.68 0.16 290)" }}
                       />
                       <span
                         className="text-xs font-body"
-                        style={{ color: "oklch(0.45 0.12 152)" }}
+                        style={{ color: "oklch(0.68 0.16 290)" }}
                       >
                         Every Sunday
                       </span>
@@ -482,17 +482,17 @@ export default function Measurements({ principal }: MeasurementsProps) {
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"
                 style={{
                   background:
-                    "linear-gradient(135deg, oklch(0.45 0.12 152 / 0.1), oklch(0.55 0.2 38 / 0.08))",
-                  border: "1px solid oklch(0.45 0.12 152 / 0.25)",
+                    "linear-gradient(135deg, oklch(0.68 0.16 290 / 0.1), oklch(0.68 0.16 290 / 0.08))",
+                  border: "1px solid oklch(0.68 0.16 290 / 0.25)",
                 }}
               >
                 <CalendarCheck
                   className="w-4 h-4 flex-shrink-0"
-                  style={{ color: "oklch(0.45 0.12 152)" }}
+                  style={{ color: "oklch(0.68 0.16 290)" }}
                 />
                 <p
                   className="text-xs font-body"
-                  style={{ color: "oklch(0.45 0.12 152)" }}
+                  style={{ color: "oklch(0.68 0.16 290)" }}
                 >
                   <span className="font-semibold">Sunday check-in:</span>{" "}
                   {thisSunday}
@@ -506,7 +506,7 @@ export default function Measurements({ principal }: MeasurementsProps) {
                 >
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
-                    style={{ background: "oklch(0.55 0.18 145 / 0.12)" }}
+                    style={{ background: "oklch(0.68 0.16 290 / 0.12)" }}
                   >
                     ✅
                   </div>
@@ -573,7 +573,7 @@ export default function Measurements({ principal }: MeasurementsProps) {
                     data-ocid="measurements.log.button"
                     style={{
                       background:
-                        "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.38 0.1 152))",
+                        "linear-gradient(135deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
                       color: "white",
                     }}
                   >

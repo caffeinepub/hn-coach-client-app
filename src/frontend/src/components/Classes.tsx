@@ -84,10 +84,10 @@ export default function Classes({ principal }: ClassesProps) {
           const almostFull = spotsLeft > 0 && spotsLeft < 3;
 
           const accentColor = alreadyEnrolled
-            ? "oklch(0.72 0.18 145)"
+            ? "oklch(0.72 0.16 290)"
             : almostFull
               ? "oklch(0.6 0.22 25)"
-              : "oklch(0.52 0.14 152)";
+              : "oklch(0.68 0.16 290)";
 
           const glowShadow = `0 0 20px ${accentColor.replace(")", " / 0.12)")}, inset 0 1px 0 oklch(1 0 0 / 0.04)`;
 
@@ -102,11 +102,11 @@ export default function Classes({ principal }: ClassesProps) {
               <Card
                 className="h-full flex flex-col overflow-hidden"
                 style={{
-                  background: "oklch(0.16 0.014 260)",
+                  background: "oklch(1 0 0)",
                   borderLeft: `4px solid ${accentColor}`,
-                  borderTop: "1px solid oklch(0.24 0.018 260)",
-                  borderRight: "1px solid oklch(0.24 0.018 260)",
-                  borderBottom: "1px solid oklch(0.24 0.018 260)",
+                  borderTop: "1px solid oklch(0.88 0.04 290)",
+                  borderRight: "1px solid oklch(0.88 0.04 290)",
+                  borderBottom: "1px solid oklch(0.88 0.04 290)",
                   boxShadow: glowShadow,
                 }}
                 data-ocid={`classes.item.${i + 1}`}
@@ -121,9 +121,9 @@ export default function Classes({ principal }: ClassesProps) {
                         <Badge
                           className="shrink-0 text-xs font-bold"
                           style={{
-                            background: "oklch(0.72 0.18 145 / 0.2)",
-                            color: "oklch(0.75 0.18 145)",
-                            border: "1px solid oklch(0.72 0.18 145 / 0.4)",
+                            background: "oklch(0.72 0.16 290 / 0.2)",
+                            color: "oklch(0.75 0.16 290)",
+                            border: "1px solid oklch(0.72 0.16 290 / 0.4)",
                           }}
                         >
                           ✓ Enrolled
@@ -179,8 +179,8 @@ export default function Classes({ principal }: ClassesProps) {
                           color: almostFull
                             ? "oklch(0.75 0.2 25)"
                             : alreadyEnrolled
-                              ? "oklch(0.75 0.18 145)"
-                              : "oklch(0.52 0.14 152)",
+                              ? "oklch(0.75 0.16 290)"
+                              : "oklch(0.68 0.16 290)",
                         }}
                       >
                         {spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left
@@ -197,8 +197,8 @@ export default function Classes({ principal }: ClassesProps) {
                       className="w-full gap-2"
                       disabled
                       style={{
-                        borderColor: "oklch(0.72 0.18 145 / 0.4)",
-                        color: "oklch(0.75 0.18 145)",
+                        borderColor: "oklch(0.72 0.16 290 / 0.4)",
+                        color: "oklch(0.75 0.16 290)",
                       }}
                     >
                       <CheckCircle className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function Classes({ principal }: ClassesProps) {
                       style={{
                         background: isFull
                           ? undefined
-                          : "linear-gradient(135deg, oklch(0.52 0.14 152), oklch(0.68 0.2 38))",
+                          : "linear-gradient(135deg, oklch(0.68 0.16 290), oklch(0.68 0.16 290))",
                         color: "white",
                       }}
                     >

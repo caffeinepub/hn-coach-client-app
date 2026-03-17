@@ -34,7 +34,7 @@ export default function DashboardPage({
         <TabsList
           className="grid grid-cols-3 mb-8 h-12"
           style={{
-            background: "oklch(0.18 0.02 260)",
+            background: "oklch(0.22 0.06 290)",
             border: "none",
             borderRadius: "14px",
             padding: "4px",
@@ -43,7 +43,7 @@ export default function DashboardPage({
         >
           <TabsTrigger
             value="home"
-            className="flex items-center gap-1.5 font-body text-white/70 data-[state=active]:text-white data-[state=active]:bg-[oklch(0.65_0.22_48)] data-[state=active]:shadow-md rounded-xl px-3 h-9"
+            className="flex items-center gap-1.5 font-body text-white/70 data-[state=active]:text-white data-[state=active]:bg-[oklch(0.68_0.16_290)] data-[state=active]:shadow-md rounded-xl px-3 h-9"
             data-ocid="dashboard.home.tab"
           >
             <Home className="w-4 h-4 shrink-0" />
@@ -51,7 +51,7 @@ export default function DashboardPage({
           </TabsTrigger>
           <TabsTrigger
             value="weight"
-            className="flex items-center gap-1.5 font-body text-white/70 data-[state=active]:text-white data-[state=active]:bg-[oklch(0.65_0.22_48)] data-[state=active]:shadow-md rounded-xl px-3 h-9"
+            className="flex items-center gap-1.5 font-body text-white/70 data-[state=active]:text-white data-[state=active]:bg-[oklch(0.68_0.16_290)] data-[state=active]:shadow-md rounded-xl px-3 h-9"
             data-ocid="dashboard.weight.tab"
           >
             <Scale className="w-4 h-4 shrink-0" />
@@ -59,7 +59,7 @@ export default function DashboardPage({
           </TabsTrigger>
           <TabsTrigger
             value="measurements"
-            className="flex items-center gap-1.5 font-body text-white/70 data-[state=active]:text-white data-[state=active]:bg-[oklch(0.65_0.22_48)] data-[state=active]:shadow-md rounded-xl px-3 h-9"
+            className="flex items-center gap-1.5 font-body text-white/70 data-[state=active]:text-white data-[state=active]:bg-[oklch(0.68_0.16_290)] data-[state=active]:shadow-md rounded-xl px-3 h-9"
             data-ocid="dashboard.measurements.tab"
           >
             <Ruler className="w-4 h-4 shrink-0" />

@@ -18,7 +18,10 @@ export default function Header({
   const { data: profile } = useUserProfile();
 
   return (
-    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md">
+    <header
+      className="sticky top-0 z-50 bg-background/90 backdrop-blur-md"
+      style={{ boxShadow: "0 2px 12px oklch(0.68 0.16 290 / 0.15)" }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <button
@@ -48,7 +51,7 @@ export default function Header({
             className="gap-1.5 font-body text-sm hover:text-primary"
           >
             <span className="text-base">🎯</span>
-            <span className="hidden sm:inline">Goals</span>
+            <span className="hidden sm:inline">My Goals</span>
           </Button>
 
           <Button
@@ -72,7 +75,7 @@ export default function Header({
             className="gap-2 font-body text-sm"
             style={{
               background:
-                "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.58 0.2 38))",
+                "linear-gradient(145deg, oklch(0.72 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
               color: "white",
               borderRadius: "20px",
               padding: "0 14px",

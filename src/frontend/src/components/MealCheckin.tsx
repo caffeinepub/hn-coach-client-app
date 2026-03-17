@@ -20,14 +20,14 @@ const MEALS: MealItem[] = [
     key: "breakfast",
     label: "Breakfast",
     emoji: "🍳",
-    color: "oklch(0.45 0.12 152)",
+    color: "oklch(0.68 0.16 290)",
     lightBg: "oklch(0.97 0.02 70)",
   },
   {
     key: "mid_morning_snacks",
     label: "Mid Morning Snacks",
     emoji: "🥪",
-    color: "oklch(0.6 0.18 140)",
+    color: "oklch(0.62 0.16 140)",
     lightBg: "oklch(0.97 0.02 140)",
   },
   {
@@ -73,8 +73,8 @@ function getMealMotivation(count: number): string {
 function getMealProgressColor(count: number): string {
   if (count === 0) return "oklch(0.7 0.01 260)";
   if (count <= 2) return "oklch(0.55 0.22 25)";
-  if (count <= 4) return "oklch(0.45 0.12 152)";
-  return "oklch(0.55 0.18 145)";
+  if (count <= 4) return "oklch(0.68 0.16 290)";
+  return "oklch(0.68 0.16 290)";
 }
 
 export default function MealCheckin() {
@@ -186,7 +186,7 @@ export default function MealCheckin() {
         transition={{ duration: 0.4, delay: 0.1 }}
         className="rounded-2xl overflow-hidden"
         style={{
-          boxShadow: "0 4px 24px oklch(0.45 0.12 152 / 0.12)",
+          boxShadow: "0 4px 24px oklch(0.68 0.16 290 / 0.12)",
           border: "1px solid oklch(0.88 0.01 80)",
         }}
         data-ocid="meals.progress.card"
@@ -195,7 +195,7 @@ export default function MealCheckin() {
           className="px-6 py-5 flex items-center gap-3"
           style={{
             background:
-              "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.38 0.1 152) 100%)",
+              "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
           }}
         >
           <div
@@ -342,8 +342,8 @@ export default function MealCheckin() {
                     <div
                       className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
                       style={{
-                        background: "oklch(0.55 0.18 145 / 0.12)",
-                        color: "oklch(0.4 0.15 145)",
+                        background: "oklch(0.68 0.16 290 / 0.12)",
+                        color: "oklch(0.62 0.18 290)",
                       }}
                     >
                       <CheckCircle className="w-3 h-3" />

@@ -98,8 +98,8 @@ export default function App() {
         className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center"
         style={{
           height: "22px",
-          background: "oklch(0.12 0.01 260)",
-          borderTop: "1px solid oklch(0.25 0.02 260)",
+          background: "oklch(0.12 0.03 290)",
+          borderTop: "1px solid oklch(0.22 0.05 290)",
         }}
         data-ocid="app.watermark.panel"
       >
@@ -107,7 +107,7 @@ export default function App() {
           className="text-center font-body"
           style={{
             fontSize: "10px",
-            color: "oklch(0.65 0.01 260)",
+            color: "oklch(0.65 0.05 290)",
             letterSpacing: "0.04em",
           }}
         >

@@ -110,13 +110,13 @@ export default function WeightLog({ principal }: WeightLogProps) {
                   </p>
                   <div className="flex items-center gap-2">
                     {trend < 0 ? (
-                      <TrendingDown className="w-5 h-5 text-green-400" />
+                      <TrendingDown className="w-5 h-5 text-violet-400" />
                     ) : (
                       <TrendingUp className="w-5 h-5 text-primary" />
                     )}
                     <p
                       className={`font-display font-bold text-2xl ${
-                        trend < 0 ? "text-green-400" : "text-primary"
+                        trend < 0 ? "text-violet-400" : "text-primary"
                       }`}
                     >
                       {trend > 0 ? "+" : ""}

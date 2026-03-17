@@ -36,6 +36,7 @@ import {
   useAllPromotions,
   useLogWeight,
   useUpcomingClasses,
+  useUserProfile,
   useWeightLogs,
 } from "../hooks/useQueries";
 import {
@@ -59,7 +60,7 @@ const MEALS = [
     label: "Breakfast",
     emoji: "🍳",
     number: 1,
-    color: "oklch(0.45 0.12 152)",
+    color: "oklch(0.68 0.16 290)",
     lightBg: "oklch(0.97 0.02 70)",
   },
   {
@@ -67,7 +68,7 @@ const MEALS = [
     label: "Morning Snack",
     emoji: "🥪",
     number: 2,
-    color: "oklch(0.6 0.18 140)",
+    color: "oklch(0.62 0.16 140)",
     lightBg: "oklch(0.97 0.02 140)",
   },
   {
@@ -160,7 +161,7 @@ function WeeklyMealSummary() {
       className="rounded-xl overflow-hidden"
       style={{
         border: "1px solid oklch(0.9 0.01 80)",
-        boxShadow: "0 2px 12px oklch(0.45 0.12 152 / 0.07)",
+        boxShadow: "0 2px 12px oklch(0.68 0.16 290 / 0.07)",
       }}
     >
       {/* Orange header strip */}
@@ -168,7 +169,7 @@ function WeeklyMealSummary() {
         className="px-4 py-2.5 flex items-center gap-2"
         style={{
           background:
-            "linear-gradient(90deg, oklch(0.45 0.12 152), oklch(0.32 0.09 152))",
+            "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.52 0.16 290))",
         }}
       >
         <span className="text-white text-sm">📅</span>
@@ -225,7 +226,7 @@ function WeeklyMealSummary() {
                   className="text-xs font-display font-bold"
                   style={{
                     color: isToday
-                      ? "oklch(0.42 0.12 152)"
+                      ? "oklch(0.62 0.16 290)"
                       : "oklch(0.5 0.01 260)",
                   }}
                 >
@@ -241,8 +242,8 @@ function WeeklyMealSummary() {
                   <span
                     className="text-xs px-1 py-0.5 rounded font-bold"
                     style={{
-                      background: "oklch(0.45 0.12 152 / 0.15)",
-                      color: "oklch(0.42 0.12 152)",
+                      background: "oklch(0.68 0.16 290 / 0.15)",
+                      color: "oklch(0.62 0.16 290)",
                       fontSize: "9px",
                     }}
                   >
@@ -320,6 +321,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   const [promoSlide, setPromoSlide] = useState(0);
   const [classSlide, setClassSlide] = useState(0);
   const principalStr = principal.toText();
+  const { data: profile } = useUserProfile();
   const [pointsTotal, setPointsTotal] = useState(() =>
     getPoints(principal.toText()),
   );
@@ -526,17 +528,17 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   };
 
   const PROMO_PILL_COLORS = [
-    "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.32 0.09 152))",
+    "linear-gradient(135deg, oklch(0.68 0.16 290), oklch(0.52 0.16 290))",
     "linear-gradient(135deg, oklch(0.5 0.2 30), oklch(0.42 0.18 20))",
     "linear-gradient(135deg, oklch(0.48 0.18 280), oklch(0.4 0.16 300))",
-    "linear-gradient(135deg, oklch(0.5 0.18 150), oklch(0.42 0.15 160))",
+    "linear-gradient(135deg, oklch(0.62 0.16 290), oklch(0.55 0.16 290))",
   ];
 
   const CLASS_PILL_COLORS = [
     "linear-gradient(135deg, oklch(0.55 0.18 200), oklch(0.45 0.16 210))",
     "linear-gradient(135deg, oklch(0.5 0.16 260), oklch(0.42 0.14 270))",
-    "linear-gradient(135deg, oklch(0.52 0.18 140), oklch(0.44 0.16 150))",
-    "linear-gradient(135deg, oklch(0.38 0.1 152), oklch(0.30 0.09 152))",
+    "linear-gradient(135deg, oklch(0.60 0.16 290), oklch(0.58 0.16 290))",
+    "linear-gradient(135deg, oklch(0.58 0.18 290), oklch(0.50 0.16 290))",
   ];
 
   return (
@@ -561,8 +563,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                 <span
                   className="px-1.5 py-0.5 rounded-full text-xs font-bold"
                   style={{
-                    background: "oklch(0.45 0.12 152 / 0.12)",
-                    color: "oklch(0.42 0.12 152)",
+                    background: "oklch(0.68 0.16 290 / 0.12)",
+                    color: "oklch(0.62 0.16 290)",
                   }}
                 >
                   {sortedPromos.length}
@@ -579,7 +581,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"
                 style={{
                   background: "oklch(0.97 0.01 80)",
-                  border: "1px dashed oklch(0.45 0.12 152 / 0.25)",
+                  border: "1px dashed oklch(0.68 0.16 290 / 0.25)",
                 }}
               >
                 <Sparkles className="w-3.5 h-3.5 text-muted-foreground/40" />
@@ -617,8 +619,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                         style={{
                           background:
                             i === promoSlide
-                              ? "oklch(0.45 0.12 152)"
-                              : "oklch(0.45 0.12 152 / 0.3)",
+                              ? "oklch(0.68 0.16 290)"
+                              : "oklch(0.68 0.16 290 / 0.3)",
                         }}
                       />
                     ))}
@@ -713,8 +715,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
             className="rounded-xl overflow-hidden"
             style={{
               background:
-                "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.5 0.22 30) 60%, oklch(0.45 0.18 15) 100%)",
-              boxShadow: "0 3px 16px oklch(0.45 0.12 152 / 0.22)",
+                "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.5 0.22 30) 60%, oklch(0.45 0.18 15) 100%)",
+              boxShadow: "0 3px 16px oklch(0.68 0.16 290 / 0.22)",
             }}
           >
             <div className="px-4 py-3 flex items-center gap-3">
@@ -724,6 +726,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                   {dailyQuote}
                 </p>
                 <p className="text-white/55 text-xs font-body mt-0.5">
+                  Welcome, {profile?.name ?? "there"} ·{" "}
                   {new Date().toLocaleDateString("en-US", {
                     weekday: "long",
                     month: "short",
@@ -741,9 +744,9 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
             className="rounded-xl overflow-hidden"
             style={{
               background:
-                "linear-gradient(135deg, oklch(0.2 0.04 260), oklch(0.16 0.03 260))",
-              border: "1.5px solid oklch(0.52 0.14 152 / 0.35)",
-              boxShadow: "0 4px 20px oklch(0.52 0.14 152 / 0.12)",
+                "linear-gradient(135deg, oklch(0.93 0.07 290), oklch(0.89 0.09 290))",
+              border: "1.5px solid oklch(0.68 0.16 290 / 0.4)",
+              boxShadow: "0 4px 20px oklch(0.68 0.16 290 / 0.18)",
             }}
           >
             {/* Top strip */}
@@ -751,7 +754,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
               className="h-0.5 w-full"
               style={{
                 background:
-                  "linear-gradient(90deg, oklch(0.52 0.14 152), oklch(0.38 0.1 152))",
+                  "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
               }}
             />
             <div className="px-4 py-3 flex items-center justify-between gap-3">
@@ -759,8 +762,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                   style={{
-                    background: "oklch(0.52 0.14 152 / 0.2)",
-                    border: "1px solid oklch(0.52 0.14 152 / 0.3)",
+                    background: "oklch(0.68 0.16 290 / 0.2)",
+                    border: "1px solid oklch(0.68 0.16 290 / 0.3)",
                   }}
                 >
                   <span className="text-xl">🪙</span>
@@ -768,13 +771,13 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                 <div>
                   <p
                     className="font-display font-extrabold text-2xl leading-none"
-                    style={{ color: "oklch(0.82 0.18 60)" }}
+                    style={{ color: "oklch(0.42 0.22 290)" }}
                   >
                     {pointsTotal.toLocaleString()}
                   </p>
                   <p
                     className="text-xs font-body font-semibold"
-                    style={{ color: "oklch(0.65 0.1 60)" }}
+                    style={{ color: "oklch(0.5 0.14 290)" }}
                   >
                     HN Reward Points
                   </p>
@@ -786,11 +789,11 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
             {getPointsHistory(principalStr).slice(0, 3).length > 0 && (
               <div
                 className="px-4 pb-3 space-y-0.5"
-                style={{ borderTop: "1px solid oklch(0.52 0.14 152 / 0.1)" }}
+                style={{ borderTop: "1px solid oklch(0.68 0.16 290 / 0.1)" }}
               >
                 <p
                   className="text-xs font-body pt-2"
-                  style={{ color: "oklch(0.55 0.06 260)" }}
+                  style={{ color: "oklch(0.4 0.08 290)" }}
                 >
                   Recent activity
                 </p>
@@ -803,7 +806,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                     >
                       <span
                         className="text-xs font-body"
-                        style={{ color: "oklch(0.7 0.05 260)" }}
+                        style={{ color: "oklch(0.35 0.06 290)" }}
                       >
                         {entry.label}
                       </span>
@@ -812,7 +815,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                         style={{
                           color:
                             entry.amount > 0
-                              ? "oklch(0.6 0.18 145)"
+                              ? "oklch(0.68 0.16 290)"
                               : "oklch(0.6 0.18 25)",
                         }}
                       >
@@ -874,15 +877,15 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                 className="rounded-xl overflow-hidden"
                 style={{
                   background:
-                    "linear-gradient(135deg, oklch(0.18 0.04 260), oklch(0.15 0.03 260))",
-                  border: "1.5px solid oklch(0.52 0.14 152 / 0.25)",
+                    "linear-gradient(135deg, oklch(0.93 0.07 290), oklch(0.89 0.09 290))",
+                  border: "1.5px solid oklch(0.68 0.16 290 / 0.4)",
                 }}
               >
                 <div
                   className="h-0.5 w-full"
                   style={{
                     background:
-                      "linear-gradient(90deg, oklch(0.52 0.14 152), oklch(0.38 0.1 152))",
+                      "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
                   }}
                 />
                 <button
@@ -900,8 +903,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                     <span
                       className="text-xs font-body px-2 py-0.5 rounded-full"
                       style={{
-                        background: "oklch(0.52 0.14 152 / 0.15)",
-                        color: "oklch(0.52 0.14 152)",
+                        background: "oklch(0.68 0.16 290 / 0.15)",
+                        color: "oklch(0.68 0.16 290)",
                       }}
                     >
                       {milestones} milestone{milestones !== 1 ? "s" : ""}
@@ -911,7 +914,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                       aria-label="toggle rewards chart"
                       className="w-4 h-4 transition-transform duration-300"
                       style={{
-                        color: "oklch(0.52 0.14 152)",
+                        color: "oklch(0.68 0.16 290)",
                         transform: rewardChartOpen
                           ? "rotate(180deg)"
                           : "rotate(0deg)",
@@ -951,7 +954,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                         </span>
                         <span
                           className="text-xs font-body"
-                          style={{ color: "oklch(0.52 0.14 152)" }}
+                          style={{ color: "oklch(0.68 0.16 290)" }}
                         >
                           {streak >= 7
                             ? "Milestone earned!"
@@ -960,14 +963,14 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                       </div>
                       <div
                         className="h-1.5 rounded-full overflow-hidden"
-                        style={{ background: "oklch(0.25 0.03 260)" }}
+                        style={{ background: "oklch(0.82 0.08 290)" }}
                       >
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
                             width: `${Math.min(100, (streak / 7) * 100)}%`,
                             background:
-                              "linear-gradient(90deg, oklch(0.52 0.14 152), oklch(0.38 0.1 152))",
+                              "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
                           }}
                         />
                       </div>
@@ -981,9 +984,9 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                           style={{
                             background:
                               tier.achieved || tier.daily
-                                ? "oklch(0.52 0.14 152 / 0.1)"
-                                : "oklch(0.22 0.03 260)",
-                            border: `1px solid ${tier.achieved || tier.daily ? "oklch(0.52 0.14 152 / 0.35)" : "oklch(0.3 0.02 260)"}`,
+                                ? "oklch(0.68 0.16 290 / 0.1)"
+                                : "oklch(0.86 0.06 290)",
+                            border: `1px solid ${tier.achieved || tier.daily ? "oklch(0.68 0.16 290 / 0.35)" : "oklch(0.78 0.08 290)"}`,
                             opacity: !tier.achieved && !tier.daily ? 0.6 : 1,
                           }}
                         >
@@ -994,14 +997,14 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                                 color:
                                   tier.achieved || tier.daily
                                     ? "oklch(0.85 0.12 60)"
-                                    : "oklch(0.65 0.05 260)",
+                                    : "oklch(0.38 0.12 290)",
                               }}
                             >
                               {tier.label}
                             </p>
                             <p
                               className="text-xs font-body"
-                              style={{ color: "oklch(0.55 0.05 260)" }}
+                              style={{ color: "oklch(0.5 0.08 290)" }}
                             >
                               {tier.sub}
                             </p>
@@ -1011,12 +1014,12 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                             style={{
                               background:
                                 tier.achieved || tier.daily
-                                  ? "oklch(0.52 0.14 152 / 0.2)"
-                                  : "oklch(0.28 0.02 260)",
+                                  ? "oklch(0.68 0.16 290 / 0.2)"
+                                  : "oklch(0.82 0.06 290)",
                               color:
                                 tier.achieved || tier.daily
-                                  ? "oklch(0.52 0.14 152)"
-                                  : "oklch(0.5 0.03 260)",
+                                  ? "oklch(0.68 0.16 290)"
+                                  : "oklch(0.45 0.12 290)",
                             }}
                           >
                             {tier.pts}
@@ -1038,9 +1041,9 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
             className="rounded-xl overflow-hidden"
             style={{
               background: alreadyLoggedWeight
-                ? "linear-gradient(135deg, oklch(0.55 0.18 145), oklch(0.45 0.15 145))"
-                : "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.32 0.09 152))",
-              boxShadow: "0 3px 16px oklch(0.45 0.12 152 / 0.18)",
+                ? "linear-gradient(135deg, oklch(0.68 0.16 290), oklch(0.62 0.18 290))"
+                : "linear-gradient(135deg, oklch(0.68 0.16 290), oklch(0.52 0.16 290))",
+              boxShadow: "0 3px 16px oklch(0.68 0.16 290 / 0.18)",
             }}
           >
             <div className="px-4 py-3">
@@ -1103,7 +1106,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                           onClick={() => setWeightUnit(u)}
                           className={`px-2 py-1 text-xs font-body font-semibold transition-colors ${
                             weightUnit === u
-                              ? "bg-white text-green-700"
+                              ? "bg-white text-violet-700"
                               : "bg-white/10 text-white hover:bg-white/20"
                           }`}
                         >
@@ -1117,7 +1120,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                       data-ocid="home.weight.upload_button"
                       className={`h-8 w-8 flex items-center justify-center rounded-lg border transition-colors shrink-0 ${
                         weightImage
-                          ? "bg-green-500/30 border-green-300/50"
+                          ? "bg-violet-500/30 border-green-300/50"
                           : "bg-white/20 hover:bg-white/30 border-white/30"
                       }`}
                       title="Upload progress photo (required)"
@@ -1136,7 +1139,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                       onClick={handleWeightLog}
                       disabled={logWeight.isPending || !weightImage}
                       data-ocid="home.weight.log.button"
-                      className="h-8 bg-white text-green-700 hover:bg-white/90 font-bold px-3 disabled:opacity-50"
+                      className="h-8 bg-white text-violet-700 hover:bg-white/90 font-bold px-3 disabled:opacity-50"
                     >
                       {logWeight.isPending ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -1192,16 +1195,16 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
             </h2>
             <span
               className="text-xs font-body ml-1"
-              style={{ color: "oklch(0.45 0.12 152)" }}
+              style={{ color: "oklch(0.68 0.16 290)" }}
             >
               +10 pts each
             </span>
             <span
               className="px-2 py-0.5 rounded-full text-xs font-bold ml-1"
               style={{
-                background: "oklch(0.45 0.12 152 / 0.12)",
-                color: "oklch(0.42 0.12 152)",
-                border: "1px solid oklch(0.45 0.12 152 / 0.3)",
+                background: "oklch(0.68 0.16 290 / 0.12)",
+                color: "oklch(0.62 0.16 290)",
+                border: "1px solid oklch(0.68 0.16 290 / 0.3)",
               }}
             >
               {loggedMealCount}/{MEALS.length}
@@ -1217,7 +1220,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="h-full rounded-full"
-                style={{ background: "oklch(0.45 0.12 152)" }}
+                style={{ background: "oklch(0.68 0.16 290)" }}
               />
             </div>
           </div>
@@ -1270,7 +1273,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                             Meal {meal.number} ·{" "}
                             <span
                               style={{
-                                color: "oklch(0.55 0.16 145)",
+                                color: "oklch(0.62 0.14 290)",
                                 fontWeight: 700,
                               }}
                             >
@@ -1283,8 +1286,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                         <div
                           className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
                           style={{
-                            background: "oklch(0.55 0.18 145 / 0.12)",
-                            color: "oklch(0.38 0.14 145)",
+                            background: "oklch(0.68 0.16 290 / 0.12)",
+                            color: "oklch(0.55 0.18 290)",
                           }}
                         >
                           <CheckCircle className="w-3 h-3" /> Done

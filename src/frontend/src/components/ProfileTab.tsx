@@ -85,19 +85,19 @@ export default function ProfileTab() {
       <Card
         className="text-center"
         style={{
-          background: "oklch(0.97 0.015 80)",
-          border: "1px solid oklch(0.88 0.015 80)",
+          background: "oklch(0.97 0.03 290)",
+          border: "1px solid oklch(0.88 0.04 290)",
         }}
       >
         <CardContent className="pt-8 pb-6">
           <div className="flex flex-col items-center gap-3">
             <Avatar
               className="w-20 h-20 text-2xl"
-              style={{ background: "oklch(0.45 0.12 152)", color: "white" }}
+              style={{ background: "oklch(0.68 0.16 290)", color: "white" }}
             >
               <AvatarFallback
                 style={{
-                  background: "oklch(0.45 0.12 152)",
+                  background: "oklch(0.68 0.16 290)",
                   color: "white",
                   fontSize: "1.5rem",
                   fontWeight: 700,
@@ -109,7 +109,7 @@ export default function ProfileTab() {
             <div>
               <p
                 className="font-display font-bold text-xl"
-                style={{ color: "oklch(0.25 0.02 80)" }}
+                style={{ color: "oklch(0.20 0.05 290)" }}
               >
                 {name || "Your Name"}
               </p>
@@ -122,11 +122,11 @@ export default function ProfileTab() {
       </Card>
 
       {/* Form card */}
-      <Card style={{ border: "1px solid oklch(0.88 0.015 80)" }}>
+      <Card style={{ border: "1px solid oklch(0.88 0.04 290)" }}>
         <CardHeader>
           <CardTitle
             className="flex items-center gap-2 font-display"
-            style={{ color: "oklch(0.45 0.12 152)" }}
+            style={{ color: "oklch(0.68 0.16 290)" }}
           >
             <User className="w-5 h-5" />
             Personal Information
@@ -205,7 +205,7 @@ export default function ProfileTab() {
               />
               <div
                 className="flex rounded-md border overflow-hidden"
-                style={{ borderColor: "oklch(0.88 0.015 80)" }}
+                style={{ borderColor: "oklch(0.88 0.04 290)" }}
               >
                 <button
                   type="button"
@@ -213,8 +213,8 @@ export default function ProfileTab() {
                   className="px-3 py-2 text-sm font-body transition-colors"
                   style={
                     ext.heightUnit === "cm"
-                      ? { background: "oklch(0.45 0.12 152)", color: "white" }
-                      : { background: "white", color: "oklch(0.4 0.02 80)" }
+                      ? { background: "oklch(0.68 0.16 290)", color: "white" }
+                      : { background: "white", color: "oklch(0.35 0.05 290)" }
                   }
                 >
                   cm
@@ -225,8 +225,8 @@ export default function ProfileTab() {
                   className="px-3 py-2 text-sm font-body transition-colors"
                   style={
                     ext.heightUnit === "ft"
-                      ? { background: "oklch(0.45 0.12 152)", color: "white" }
-                      : { background: "white", color: "oklch(0.4 0.02 80)" }
+                      ? { background: "oklch(0.68 0.16 290)", color: "white" }
+                      : { background: "white", color: "oklch(0.35 0.05 290)" }
                   }
                 >
                   ft
@@ -250,7 +250,7 @@ export default function ProfileTab() {
               />
               <div
                 className="flex rounded-md border overflow-hidden"
-                style={{ borderColor: "oklch(0.88 0.015 80)" }}
+                style={{ borderColor: "oklch(0.88 0.04 290)" }}
               >
                 <button
                   type="button"
@@ -258,8 +258,8 @@ export default function ProfileTab() {
                   className="px-3 py-2 text-sm font-body transition-colors"
                   style={
                     ext.weightUnit === "kg"
-                      ? { background: "oklch(0.45 0.12 152)", color: "white" }
-                      : { background: "white", color: "oklch(0.4 0.02 80)" }
+                      ? { background: "oklch(0.68 0.16 290)", color: "white" }
+                      : { background: "white", color: "oklch(0.35 0.05 290)" }
                   }
                 >
                   kg
@@ -270,8 +270,8 @@ export default function ProfileTab() {
                   className="px-3 py-2 text-sm font-body transition-colors"
                   style={
                     ext.weightUnit === "lbs"
-                      ? { background: "oklch(0.45 0.12 152)", color: "white" }
-                      : { background: "white", color: "oklch(0.4 0.02 80)" }
+                      ? { background: "oklch(0.68 0.16 290)", color: "white" }
+                      : { background: "white", color: "oklch(0.35 0.05 290)" }
                   }
                 >
                   lbs
@@ -299,7 +299,7 @@ export default function ProfileTab() {
             onClick={handleSave}
             disabled={saveProfile.isPending}
             className="w-full mt-2 font-body font-semibold"
-            style={{ background: "oklch(0.45 0.12 152)", color: "white" }}
+            style={{ background: "oklch(0.68 0.16 290)", color: "white" }}
             data-ocid="profile.save.button"
           >
             {saveProfile.isPending ? (

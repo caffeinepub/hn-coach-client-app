@@ -91,7 +91,7 @@ function PasswordGate({
             className="font-display font-extrabold text-lg tracking-tight"
             style={{ color: "oklch(0.95 0.01 260)" }}
           >
-            HN <span style={{ color: "oklch(0.52 0.14 152)" }}>Coach</span>
+            HN <span style={{ color: "oklch(0.68 0.16 290)" }}>Coach</span>
           </span>
         </div>
         <button
@@ -135,8 +135,8 @@ function PasswordGate({
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1"
                 style={{
                   background:
-                    "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.38 0.1 152) 100%)",
-                  boxShadow: "0 8px 24px oklch(0.45 0.12 152 / 0.35)",
+                    "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
+                  boxShadow: "0 8px 24px oklch(0.68 0.16 290 / 0.35)",
                 }}
               >
                 <Lock className="w-7 h-7 text-white" />
@@ -183,9 +183,9 @@ function PasswordGate({
                 onClick={handleUnlock}
                 style={{
                   background:
-                    "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.38 0.1 152) 100%)",
+                    "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
                   color: "white",
-                  boxShadow: "0 4px 16px oklch(0.45 0.12 152 / 0.3)",
+                  boxShadow: "0 4px 16px oklch(0.68 0.16 290 / 0.3)",
                 }}
                 data-ocid="admin.unlock.button"
               >
@@ -280,8 +280,8 @@ function ClientCard({ principal }: { principal: Principal }) {
             className="w-11 h-11 rounded-full flex items-center justify-center font-display font-bold text-white text-sm flex-shrink-0"
             style={{
               background:
-                "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.38 0.1 152) 100%)",
-              boxShadow: "0 3px 10px oklch(0.45 0.12 152 / 0.3)",
+                "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
+              boxShadow: "0 3px 10px oklch(0.68 0.16 290 / 0.3)",
             }}
           >
             {initials}
@@ -303,9 +303,9 @@ function ClientCard({ principal }: { principal: Principal }) {
             <div
               className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold mt-1 w-fit"
               style={{
-                background: "oklch(0.52 0.14 152 / 0.12)",
-                border: "1px solid oklch(0.52 0.14 152 / 0.25)",
-                color: "oklch(0.38 0.1 152)",
+                background: "oklch(0.68 0.16 290 / 0.12)",
+                border: "1px solid oklch(0.68 0.16 290 / 0.25)",
+                color: "oklch(0.58 0.18 290)",
               }}
             >
               <span>🪙</span>
@@ -421,7 +421,7 @@ function ClientCard({ principal }: { principal: Principal }) {
               <div>
                 <h4
                   className="font-display font-bold text-xs uppercase tracking-widest mb-2"
-                  style={{ color: "oklch(0.38 0.1 152)" }}
+                  style={{ color: "oklch(0.58 0.18 290)" }}
                 >
                   🍽️ Today's Meals ({TODAY})
                 </h4>
@@ -439,12 +439,12 @@ function ClientCard({ principal }: { principal: Principal }) {
                       <div
                         key={log.mealType}
                         className="rounded-lg px-3 py-2 flex items-start gap-3"
-                        style={{ background: "oklch(0.97 0.01 70)" }}
+                        style={{ background: "oklch(0.97 0.03 290)" }}
                       >
                         <div className="flex-1 min-w-0">
                           <p
                             className="text-xs font-body font-semibold capitalize"
-                            style={{ color: "oklch(0.45 0.12 152)" }}
+                            style={{ color: "oklch(0.68 0.16 290)" }}
                           >
                             {log.mealType.replace(/_/g, " ")}
                           </p>
@@ -471,7 +471,7 @@ function ClientCard({ principal }: { principal: Principal }) {
               <div>
                 <h4
                   className="font-display font-bold text-xs uppercase tracking-widest mb-2"
-                  style={{ color: "oklch(0.45 0.18 145)" }}
+                  style={{ color: "oklch(0.68 0.16 290)" }}
                 >
                   📏 Latest Measurements
                 </h4>
@@ -486,7 +486,7 @@ function ClientCard({ principal }: { principal: Principal }) {
                 ) : (
                   <div
                     className="rounded-xl px-4 py-3"
-                    style={{ background: "oklch(0.97 0.01 145)" }}
+                    style={{ background: "oklch(0.97 0.03 290)" }}
                   >
                     <p
                       className="text-xs font-body mb-3"
@@ -503,17 +503,17 @@ function ClientCard({ principal }: { principal: Principal }) {
                         <div
                           key={m.label}
                           className="text-center rounded-lg py-2"
-                          style={{ background: "oklch(0.94 0.015 145)" }}
+                          style={{ background: "oklch(0.94 0.04 290)" }}
                         >
                           <p
                             className="text-xs font-body"
-                            style={{ color: "oklch(0.5 0.06 145)" }}
+                            style={{ color: "oklch(0.62 0.12 290)" }}
                           >
                             {m.label}
                           </p>
                           <p
                             className="font-display font-bold text-base mt-0.5"
-                            style={{ color: "oklch(0.38 0.15 145)" }}
+                            style={{ color: "oklch(0.58 0.18 290)" }}
                           >
                             {m.value}
                             <span className="text-xs font-normal ml-0.5">
@@ -554,7 +554,7 @@ function ClientTrackingTab() {
       >
         <Loader2
           className="w-6 h-6 animate-spin"
-          style={{ color: "oklch(0.45 0.12 152)" }}
+          style={{ color: "oklch(0.68 0.16 290)" }}
         />
         <span className="ml-2 font-body text-muted-foreground">
           Loading clients...
@@ -1064,13 +1064,13 @@ function AdminStatsRow() {
       <div
         className="rounded-xl p-4 flex flex-col items-center gap-1 text-center"
         style={{
-          background: "oklch(0.16 0.03 260)",
+          background: "oklch(0.22 0.06 290)",
           border: "1px solid oklch(0.25 0.04 260)",
         }}
       >
         <p
           className="font-display font-extrabold text-3xl"
-          style={{ color: "oklch(0.52 0.14 152)" }}
+          style={{ color: "oklch(0.68 0.16 290)" }}
         >
           {allUsers?.length ?? "—"}
         </p>
@@ -1084,7 +1084,7 @@ function AdminStatsRow() {
       <div
         className="rounded-xl p-4 flex flex-col items-center gap-1 text-center"
         style={{
-          background: "oklch(0.16 0.03 260)",
+          background: "oklch(0.22 0.06 290)",
           border: "1px solid oklch(0.25 0.04 260)",
         }}
       >
@@ -1104,13 +1104,13 @@ function AdminStatsRow() {
       <div
         className="rounded-xl p-4 flex flex-col items-center gap-1 text-center"
         style={{
-          background: "oklch(0.16 0.03 260)",
+          background: "oklch(0.22 0.06 290)",
           border: "1px solid oklch(0.25 0.04 260)",
         }}
       >
         <p
           className="font-display font-extrabold text-3xl"
-          style={{ color: "oklch(0.78 0.18 145)" }}
+          style={{ color: "oklch(0.78 0.16 290)" }}
         >
           {promotions.length}
         </p>
@@ -1176,8 +1176,8 @@ export default function CoachAdminPage({
               className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
               style={{
                 background:
-                  "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.38 0.1 152) 100%)",
-                boxShadow: "0 8px 24px oklch(0.45 0.12 152 / 0.35)",
+                  "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
+                boxShadow: "0 8px 24px oklch(0.68 0.16 290 / 0.35)",
               }}
             >
               <img
@@ -1192,7 +1192,7 @@ export default function CoachAdminPage({
                 style={{ color: "oklch(0.97 0.01 260)" }}
               >
                 HN Coach{" "}
-                <span style={{ color: "oklch(0.52 0.14 152)" }}>Admin</span>
+                <span style={{ color: "oklch(0.68 0.16 290)" }}>Admin</span>
               </h1>
               <p
                 className="font-body text-sm mt-0.5"
@@ -1244,11 +1244,11 @@ export default function CoachAdminPage({
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-body font-semibold transition-all"
                 style={{
                   background: isActive
-                    ? "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.38 0.1 152) 100%)"
+                    ? "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)"
                     : "transparent",
                   color: isActive ? "white" : "oklch(0.6 0.04 260)",
                   boxShadow: isActive
-                    ? "0 2px 8px oklch(0.45 0.12 152 / 0.3)"
+                    ? "0 2px 8px oklch(0.68 0.16 290 / 0.3)"
                     : "none",
                 }}
                 data-ocid={`admin.${tab.id}.tab`}
