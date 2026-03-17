@@ -1,36 +1,27 @@
 # HN Coach Client App
 
 ## Current State
-- GoalsTab has optional photo upload (front/side) but no enforcement before saving
-- Measurements has optional photo upload in weekly check-in but no enforcement
-- Points system: footsteps = 15 pts, meal = 10 pts, weight = 20 pts, measurements = 50 pts
-- No daily all-check-in bonus, no 7-day streak milestone, no progressive milestone rewards
-- Login page is a full two-column wide layout (large, takes full screen)
+Full-stack health/fitness tracking app with React frontend. Orange/navy theme throughout. HomeDashboard has: daily quote at top, promotions/classes slideshow, weight log, nutrition tip panel, meals check-in, weekly check-in (measurements), weekly meal summary, and right-side panel with nutrition + motivation cards. Login page (AuthPage) uses orange accents with fitness illustration.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Daily all-check-in bonus: 50 points when all 6 meals + weight are logged in one day
-- 7-day streak bonus: 500 milestone points when 7 consecutive days of full bonus earned
-- Progressive milestone rewards:
-  - 2nd time earning 500-pt streak milestone: +500 bonus
-  - 3rd time: +1000 bonus
-  - 4th time: +2000 bonus
-- Visual reward progression chart in the rewards/points section showing all milestone tiers
-- Streak tracking stored in localStorage
+- Nothing new to add
 
 ### Modify
-- GoalsTab: Require both front and side view images before saving goals (show validation error if missing)
-- Measurements weekly check-in: Require both front and side images before completing check-in
-- Points config: footsteps 15 → 20 pts
-- Login page: Compact, small, centered card layout — no left/right split, minimal height, small illustration or logo only, login card is the focus
+- **Theme**: Replace all orange accents (#f97316, orange-*, amber-*) with forest green (#2D6A4F and variants: light #52B788, dark #1B4332, accent #40916C). White backgrounds, black/dark gray text. Active tab highlight, buttons, badges, gradients, borders — all switch to forest green palette. Professional, clean, minimal.
+- **Login page (AuthPage)**: Update to forest green theme — replace orange "HN" highlight and all orange accents with forest green. Keep illustration and compact layout.
+- **Daily Motivation card placement**: Move the MotivationPanel / daily motivation card from its current position to just ABOVE the Weekly Meal Summary section inside HomeDashboard.
+- **index.css**: Update CSS custom properties and any hardcoded orange colors to forest green equivalents.
+- All components that use orange/amber Tailwind classes should switch to green equivalents.
 
 ### Remove
-- Large two-panel login page layout (full-screen split left/right)
+- Nothing to remove
 
 ## Implementation Plan
-1. Update `src/frontend/src/utils/points.ts`: change footsteps to 20, add streak/bonus logic functions
-2. Update `src/frontend/src/components/GoalsTab.tsx`: validate front+side images required on save
-3. Update `src/frontend/src/components/Measurements.tsx`: validate front+side images required on weekly check-in submit
-4. Update `src/frontend/src/components/HomeDashboard.tsx`: after logging all check-ins detect if daily bonus earned, award 50 pts; check 7-day streak and award milestone; check progressive milestones; update points reward chart section
-5. Update `src/frontend/src/pages/AuthPage.tsx`: compact centered single-card login page
+1. Update `index.css` — change CSS variables and any hardcoded orange to forest green palette (--primary, --accent, etc.)
+2. Update `HomeDashboard.tsx` — move MotivationPanel component to just above the Weekly Meal Summary section; replace all orange/amber Tailwind classes with green equivalents
+3. Update `AuthPage.tsx` — replace orange styling with forest green; keep "HN" highlighted but in green
+4. Update `Header.tsx` — replace orange pill/gradient with forest green
+5. Update `MealCheckin.tsx`, `WeightLog.tsx`, `Measurements.tsx`, `Promotions.tsx`, `Classes.tsx`, `NutritionPanel.tsx`, `MotivationPanel.tsx`, `ProfileTab.tsx`, `GoalsTab.tsx`, `CoachAdminPage.tsx` — replace orange/amber classes with forest green equivalents
+6. Validate and fix any build errors

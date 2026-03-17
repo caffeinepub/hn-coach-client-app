@@ -5,21 +5,21 @@ import { motion } from "motion/react";
 import { useAllPromotions } from "../hooks/useQueries";
 
 const PROMO_BG = [
-  "linear-gradient(145deg, oklch(0.22 0.05 48), oklch(0.18 0.03 48))",
-  "linear-gradient(145deg, oklch(0.22 0.05 30), oklch(0.18 0.03 25))",
+  "linear-gradient(145deg, oklch(0.25 0.12 152), oklch(0.25 0.12 152))",
+  "linear-gradient(145deg, oklch(0.25 0.12 152), oklch(0.25 0.12 152))",
   "linear-gradient(145deg, oklch(0.22 0.04 280), oklch(0.18 0.03 290))",
   "linear-gradient(145deg, oklch(0.22 0.04 150), oklch(0.18 0.03 155))",
 ];
 
 const BADGE_COLORS = [
   {
-    bg: "oklch(0.74 0.21 48 / 0.25)",
+    bg: "oklch(0.52 0.14 152 / 0.25)",
     text: "oklch(0.88 0.15 60)",
-    border: "oklch(0.74 0.21 48 / 0.5)",
+    border: "oklch(0.52 0.14 152 / 0.5)",
   },
   {
     bg: "oklch(0.65 0.22 30 / 0.25)",
-    text: "oklch(0.85 0.15 40)",
+    text: "oklch(0.65 0.12 152)",
     border: "oklch(0.65 0.22 30 / 0.5)",
   },
   {
@@ -35,7 +35,7 @@ const BADGE_COLORS = [
 ];
 
 const GLOW_COLORS = [
-  "oklch(0.74 0.21 48)",
+  "oklch(0.52 0.14 152)",
   "oklch(0.7 0.21 63)",
   "oklch(0.7 0.2 78)",
   "oklch(0.72 0.19 93)",
@@ -96,9 +96,9 @@ export default function Promotions() {
                 className="h-full relative overflow-hidden shimmer"
                 style={{
                   background: bg,
-                  border: `1px solid oklch(0.74 0.21 48 / ${borderAlpha})`,
+                  border: `1px solid oklch(0.52 0.14 152 / ${borderAlpha})`,
                   boxShadow:
-                    "0 0 30px oklch(0.74 0.21 48 / 0.1), inset 0 1px 0 oklch(1 0 0 / 0.05)",
+                    "0 0 30px oklch(0.52 0.14 152 / 0.1), inset 0 1px 0 oklch(1 0 0 / 0.05)",
                 }}
                 data-ocid={`promotions.item.${i + 1}`}
               >
@@ -126,7 +126,7 @@ export default function Promotions() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: "oklch(0.74 0.21 48 / 0.2)" }}
+                        style={{ background: "oklch(0.52 0.14 152 / 0.2)" }}
                       >
                         <Sparkles
                           className="w-4 h-4"

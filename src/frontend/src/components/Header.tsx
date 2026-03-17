@@ -72,7 +72,7 @@ export default function Header({
             className="gap-2 font-body text-sm"
             style={{
               background:
-                "linear-gradient(135deg, oklch(0.65 0.22 48), oklch(0.58 0.2 38))",
+                "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.58 0.2 38))",
               color: "white",
               borderRadius: "20px",
               padding: "0 14px",

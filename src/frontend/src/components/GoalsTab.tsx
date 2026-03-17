@@ -104,7 +104,7 @@ function PhotoUploadCard({
             src={imageUrl}
             alt={label}
             className="w-24 h-32 object-cover rounded-lg border-2"
-            style={{ borderColor: "oklch(0.65 0.22 48 / 0.4)" }}
+            style={{ borderColor: "oklch(0.45 0.12 152 / 0.4)" }}
           />
           <button
             type="button"
@@ -123,17 +123,17 @@ function PhotoUploadCard({
           style={{
             borderColor: required
               ? "oklch(0.55 0.2 25)"
-              : "oklch(0.65 0.22 48 / 0.4)",
+              : "oklch(0.45 0.12 152 / 0.4)",
           }}
           data-ocid={`${ocidPrefix}.upload_button`}
         >
           <Camera
             className="w-6 h-6"
-            style={{ color: "oklch(0.65 0.22 48)" }}
+            style={{ color: "oklch(0.45 0.12 152)" }}
           />
           <span
             className="text-xs font-body text-center"
-            style={{ color: "oklch(0.55 0.1 48)" }}
+            style={{ color: "oklch(0.42 0.11 152)" }}
           >
             Tap to upload
           </span>
@@ -208,7 +208,7 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
         <CardHeader>
           <CardTitle
             className="flex items-center gap-2 font-display"
-            style={{ color: "oklch(0.65 0.22 48)" }}
+            style={{ color: "oklch(0.45 0.12 152)" }}
           >
             <Camera className="w-5 h-5" />
             Progress Photos
@@ -240,7 +240,7 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
         <CardHeader>
           <CardTitle
             className="flex items-center gap-2 font-display"
-            style={{ color: "oklch(0.65 0.22 48)" }}
+            style={{ color: "oklch(0.45 0.12 152)" }}
           >
             <Scale className="w-5 h-5" />
             Weight Goal
@@ -256,7 +256,7 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
                 Current Weight
               </span>
               <Badge
-                style={{ background: "oklch(0.65 0.22 48)", color: "white" }}
+                style={{ background: "oklch(0.45 0.12 152)", color: "white" }}
               >
                 {Number(latestWeight).toFixed(1)} kg
               </Badge>
@@ -286,7 +286,7 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
                 </span>
                 <span
                   className="font-semibold"
-                  style={{ color: "oklch(0.65 0.22 48)" }}
+                  style={{ color: "oklch(0.45 0.12 152)" }}
                 >
                   {weightProgress}%
                 </span>
@@ -302,7 +302,7 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
         <CardHeader>
           <CardTitle
             className="flex items-center gap-2 font-display"
-            style={{ color: "oklch(0.65 0.22 48)" }}
+            style={{ color: "oklch(0.45 0.12 152)" }}
           >
             <Ruler className="w-5 h-5" />
             Measurement Goals (cm)
@@ -340,7 +340,7 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
                     <Progress value={prog} className="h-1.5 flex-1" />
                     <span
                       className="text-xs font-semibold"
-                      style={{ color: "oklch(0.65 0.22 48)" }}
+                      style={{ color: "oklch(0.45 0.12 152)" }}
                     >
                       {prog}%
                     </span>
@@ -358,7 +358,7 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
           <Button
             onClick={handleSave}
             className="w-full font-body font-semibold"
-            style={{ background: "oklch(0.65 0.22 48)", color: "white" }}
+            style={{ background: "oklch(0.45 0.12 152)", color: "white" }}
             data-ocid="goals.save.button"
           >
             <Target className="w-4 h-4 mr-2" />

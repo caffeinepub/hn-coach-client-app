@@ -48,7 +48,7 @@ function FitnessIllustration() {
           height="10"
           rx="5"
           transform="rotate(-10 58 52)"
-          fill="oklch(0.65 0.22 48 / 0.85)"
+          fill="oklch(0.45 0.12 152 / 0.85)"
         />
         <rect
           x="112"
@@ -57,7 +57,7 @@ function FitnessIllustration() {
           height="10"
           rx="5"
           transform="rotate(10 112 52)"
-          fill="oklch(0.65 0.22 48 / 0.85)"
+          fill="oklch(0.45 0.12 152 / 0.85)"
         />
         {/* Legs */}
         <rect
@@ -66,7 +66,7 @@ function FitnessIllustration() {
           width="10"
           height="18"
           rx="5"
-          fill="oklch(0.52 0.2 48)"
+          fill="oklch(0.52 0.12 152)"
         />
         <rect
           x="102"
@@ -74,11 +74,11 @@ function FitnessIllustration() {
           width="10"
           height="18"
           rx="5"
-          fill="oklch(0.48 0.19 40)"
+          fill="oklch(0.48 0.12 152)"
         />
         {/* Sparkles */}
-        <circle cx="34" cy="30" r="3" fill="oklch(0.74 0.21 48 / 0.7)" />
-        <circle cx="166" cy="28" r="2.5" fill="oklch(0.74 0.21 48 / 0.6)" />
+        <circle cx="34" cy="30" r="3" fill="oklch(0.52 0.14 152 / 0.7)" />
+        <circle cx="166" cy="28" r="2.5" fill="oklch(0.52 0.14 152 / 0.6)" />
         <defs>
           <linearGradient
             id="tG"
@@ -88,8 +88,8 @@ function FitnessIllustration() {
             y2="98"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0%" stopColor="oklch(0.68 0.22 48)" />
-            <stop offset="100%" stopColor="oklch(0.52 0.2 38)" />
+            <stop offset="0%" stopColor="oklch(0.65 0.12 152)" />
+            <stop offset="100%" stopColor="oklch(0.52 0.12 152)" />
           </linearGradient>
           <linearGradient
             id="hG"
@@ -99,8 +99,8 @@ function FitnessIllustration() {
             y2="64"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0%" stopColor="oklch(0.75 0.18 50)" />
-            <stop offset="100%" stopColor="oklch(0.6 0.16 42)" />
+            <stop offset="0%" stopColor="oklch(0.65 0.12 152)" />
+            <stop offset="100%" stopColor="oklch(0.6 0.12 152)" />
           </linearGradient>
           <linearGradient
             id="pG"
@@ -110,8 +110,8 @@ function FitnessIllustration() {
             y2="1"
             gradientUnits="objectBoundingBox"
           >
-            <stop offset="0%" stopColor="oklch(0.72 0.2 48)" />
-            <stop offset="100%" stopColor="oklch(0.52 0.19 38)" />
+            <stop offset="0%" stopColor="oklch(0.65 0.12 152)" />
+            <stop offset="100%" stopColor="oklch(0.52 0.12 152)" />
           </linearGradient>
         </defs>
       </svg>
@@ -167,16 +167,16 @@ export default function AuthPage() {
             className="backdrop-blur-md"
             style={{
               background: "oklch(0.18 0.02 260 / 0.98)",
-              border: "2px solid oklch(0.74 0.21 48 / 0.5)",
+              border: "2px solid oklch(0.52 0.14 152 / 0.5)",
               boxShadow:
-                "0 0 70px oklch(0.74 0.21 48 / 0.25), 0 0 30px oklch(0.74 0.21 48 / 0.15), inset 0 1px 0 oklch(1 0 0 / 0.06)",
+                "0 0 70px oklch(0.52 0.14 152 / 0.25), 0 0 30px oklch(0.52 0.14 152 / 0.15), inset 0 1px 0 oklch(1 0 0 / 0.06)",
             }}
           >
             <div
               className="h-1 w-full rounded-t-lg"
               style={{
                 background:
-                  "linear-gradient(90deg, oklch(0.74 0.21 48), oklch(0.62 0.2 38), oklch(0.55 0.2 30))",
+                  "linear-gradient(90deg, oklch(0.45 0.12 152), oklch(0.38 0.1 152), oklch(0.32 0.09 152))",
               }}
             />
             <CardHeader className="text-center">
@@ -231,7 +231,7 @@ export default function AuthPage() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 60% 60% at 50% 50%, oklch(0.74 0.21 48 / 0.1), transparent 70%)",
+            "radial-gradient(ellipse 60% 60% at 50% 50%, oklch(0.52 0.14 152 / 0.1), transparent 70%)",
         }}
       />
 
@@ -246,9 +246,9 @@ export default function AuthPage() {
           className="backdrop-blur-md overflow-hidden"
           style={{
             background: "oklch(0.18 0.02 260 / 0.98)",
-            border: "2px solid oklch(0.74 0.21 48 / 0.5)",
+            border: "2px solid oklch(0.52 0.14 152 / 0.5)",
             boxShadow:
-              "0 0 80px oklch(0.74 0.21 48 / 0.22), 0 0 40px oklch(0.74 0.21 48 / 0.14), inset 0 1px 0 oklch(1 0 0 / 0.06)",
+              "0 0 80px oklch(0.52 0.14 152 / 0.22), 0 0 40px oklch(0.52 0.14 152 / 0.14), inset 0 1px 0 oklch(1 0 0 / 0.06)",
           }}
         >
           {/* Orange top accent strip */}
@@ -256,7 +256,7 @@ export default function AuthPage() {
             className="h-1 w-full"
             style={{
               background:
-                "linear-gradient(90deg, oklch(0.74 0.21 48), oklch(0.62 0.2 38), oklch(0.55 0.2 30))",
+                "linear-gradient(90deg, oklch(0.45 0.12 152), oklch(0.38 0.1 152), oklch(0.32 0.09 152))",
             }}
           />
           <CardHeader className="text-center pb-2 pt-5">
@@ -273,8 +273,9 @@ export default function AuthPage() {
                   }}
                 />
               </div>
-              <span className="font-display font-extrabold text-lg tracking-tight text-foreground">
-                HN <span className="gradient-fire-text">Coach</span>
+              <span className="font-display font-extrabold text-lg tracking-tight">
+                <span className="gradient-fire-text">HN</span>{" "}
+                <span className="gradient-fire-text">Coach</span>
               </span>
             </div>
 
@@ -306,10 +307,7 @@ export default function AuthPage() {
             </Button>
 
             <p className="text-center text-xs text-muted-foreground font-body leading-relaxed">
-              New here? Your account is created automatically.{" "}
-              <span className="opacity-60">
-                First member becomes the coach.
-              </span>
+              New here? Your account is created automatically.
             </p>
           </CardContent>
         </Card>

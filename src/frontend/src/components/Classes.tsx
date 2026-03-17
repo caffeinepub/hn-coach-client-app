@@ -87,7 +87,7 @@ export default function Classes({ principal }: ClassesProps) {
             ? "oklch(0.72 0.18 145)"
             : almostFull
               ? "oklch(0.6 0.22 25)"
-              : "oklch(0.74 0.21 48)";
+              : "oklch(0.52 0.14 152)";
 
           const glowShadow = `0 0 20px ${accentColor.replace(")", " / 0.12)")}, inset 0 1px 0 oklch(1 0 0 / 0.04)`;
 
@@ -180,7 +180,7 @@ export default function Classes({ principal }: ClassesProps) {
                             ? "oklch(0.75 0.2 25)"
                             : alreadyEnrolled
                               ? "oklch(0.75 0.18 145)"
-                              : "oklch(0.74 0.21 48)",
+                              : "oklch(0.52 0.14 152)",
                         }}
                       >
                         {spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left
@@ -213,7 +213,7 @@ export default function Classes({ principal }: ClassesProps) {
                       style={{
                         background: isFull
                           ? undefined
-                          : "linear-gradient(135deg, oklch(0.74 0.21 48), oklch(0.68 0.2 38))",
+                          : "linear-gradient(135deg, oklch(0.52 0.14 152), oklch(0.68 0.2 38))",
                         color: "white",
                       }}
                     >

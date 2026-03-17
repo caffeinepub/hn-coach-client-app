@@ -20,7 +20,7 @@ const MEALS: MealItem[] = [
     key: "breakfast",
     label: "Breakfast",
     emoji: "🍳",
-    color: "oklch(0.65 0.22 48)",
+    color: "oklch(0.45 0.12 152)",
     lightBg: "oklch(0.97 0.02 70)",
   },
   {
@@ -73,7 +73,7 @@ function getMealMotivation(count: number): string {
 function getMealProgressColor(count: number): string {
   if (count === 0) return "oklch(0.7 0.01 260)";
   if (count <= 2) return "oklch(0.55 0.22 25)";
-  if (count <= 4) return "oklch(0.65 0.22 48)";
+  if (count <= 4) return "oklch(0.45 0.12 152)";
   return "oklch(0.55 0.18 145)";
 }
 
@@ -186,7 +186,7 @@ export default function MealCheckin() {
         transition={{ duration: 0.4, delay: 0.1 }}
         className="rounded-2xl overflow-hidden"
         style={{
-          boxShadow: "0 4px 24px oklch(0.65 0.22 48 / 0.12)",
+          boxShadow: "0 4px 24px oklch(0.45 0.12 152 / 0.12)",
           border: "1px solid oklch(0.88 0.01 80)",
         }}
         data-ocid="meals.progress.card"
@@ -195,7 +195,7 @@ export default function MealCheckin() {
           className="px-6 py-5 flex items-center gap-3"
           style={{
             background:
-              "linear-gradient(135deg, oklch(0.65 0.22 48) 0%, oklch(0.55 0.2 38) 100%)",
+              "linear-gradient(135deg, oklch(0.45 0.12 152) 0%, oklch(0.38 0.1 152) 100%)",
           }}
         >
           <div

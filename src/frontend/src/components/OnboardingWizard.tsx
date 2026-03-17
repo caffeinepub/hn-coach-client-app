@@ -161,8 +161,8 @@ export default function OnboardingWizard({
               <span
                 className="text-xs font-body font-semibold px-2.5 py-1 rounded-full"
                 style={{
-                  background: "oklch(0.65 0.22 48 / 0.12)",
-                  color: "oklch(0.5 0.18 48)",
+                  background: "oklch(0.45 0.12 152 / 0.12)",
+                  color: "oklch(0.5 0.12 152)",
                 }}
               >
                 Step {step} of 2
@@ -175,7 +175,7 @@ export default function OnboardingWizard({
                     style={{
                       background:
                         s <= step
-                          ? "oklch(0.65 0.22 48)"
+                          ? "oklch(0.45 0.12 152)"
                           : "oklch(0.88 0.01 80)",
                       width: s === step ? "20px" : "8px",
                     }}
@@ -188,11 +188,11 @@ export default function OnboardingWizard({
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: "oklch(0.65 0.22 48 / 0.15)" }}
+                  style={{ background: "oklch(0.45 0.12 152 / 0.15)" }}
                 >
                   <User
                     className="w-5 h-5"
-                    style={{ color: "oklch(0.65 0.22 48)" }}
+                    style={{ color: "oklch(0.45 0.12 152)" }}
                   />
                 </div>
                 <div>
@@ -208,11 +208,11 @@ export default function OnboardingWizard({
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: "oklch(0.65 0.22 48 / 0.15)" }}
+                  style={{ background: "oklch(0.45 0.12 152 / 0.15)" }}
                 >
                   <Target
                     className="w-5 h-5"
-                    style={{ color: "oklch(0.65 0.22 48)" }}
+                    style={{ color: "oklch(0.45 0.12 152)" }}
                   />
                 </div>
                 <div>
@@ -235,11 +235,11 @@ export default function OnboardingWizard({
                 <div className="flex justify-center mb-2">
                   <Avatar
                     className="w-16 h-16"
-                    style={{ background: "oklch(0.65 0.22 48)" }}
+                    style={{ background: "oklch(0.45 0.12 152)" }}
                   >
                     <AvatarFallback
                       style={{
-                        background: "oklch(0.65 0.22 48)",
+                        background: "oklch(0.45 0.12 152)",
                         color: "white",
                         fontSize: "1.2rem",
                         fontWeight: 700,
@@ -318,7 +318,7 @@ export default function OnboardingWizard({
                           style={
                             ext.heightUnit === u
                               ? {
-                                  background: "oklch(0.65 0.22 48)",
+                                  background: "oklch(0.45 0.12 152)",
                                   color: "white",
                                 }
                               : {
@@ -360,7 +360,7 @@ export default function OnboardingWizard({
                           style={
                             ext.weightUnit === u
                               ? {
-                                  background: "oklch(0.65 0.22 48)",
+                                  background: "oklch(0.45 0.12 152)",
                                   color: "white",
                                 }
                               : {
@@ -392,17 +392,17 @@ export default function OnboardingWizard({
                 <div
                   className="flex items-center gap-2 px-3 py-2 rounded-xl mb-2"
                   style={{
-                    background: "oklch(0.65 0.22 48 / 0.08)",
-                    border: "1px solid oklch(0.65 0.22 48 / 0.2)",
+                    background: "oklch(0.45 0.12 152 / 0.08)",
+                    border: "1px solid oklch(0.45 0.12 152 / 0.2)",
                   }}
                 >
                   <CheckCircle
                     className="w-4 h-4 shrink-0"
-                    style={{ color: "oklch(0.65 0.22 48)" }}
+                    style={{ color: "oklch(0.45 0.12 152)" }}
                   />
                   <p
                     className="text-xs font-body"
-                    style={{ color: "oklch(0.45 0.15 48)" }}
+                    style={{ color: "oklch(0.45 0.12 152)" }}
                   >
                     Profile saved! Now set your targets.
                   </p>
@@ -412,7 +412,7 @@ export default function OnboardingWizard({
                   <Label className="font-body font-medium flex items-center gap-2">
                     <Scale
                       className="w-4 h-4"
-                      style={{ color: "oklch(0.65 0.22 48)" }}
+                      style={{ color: "oklch(0.45 0.12 152)" }}
                     />
                     Target Weight (kg)
                   </Label>
@@ -473,7 +473,7 @@ export default function OnboardingWizard({
                 className="w-full h-11 font-display font-semibold gap-2"
                 style={{
                   background:
-                    "linear-gradient(135deg, oklch(0.65 0.22 48), oklch(0.55 0.2 38))",
+                    "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.38 0.1 152))",
                   color: "white",
                 }}
                 data-ocid="onboarding.next.button"
@@ -494,7 +494,7 @@ export default function OnboardingWizard({
                   className="w-full h-11 font-display font-semibold gap-2"
                   style={{
                     background:
-                      "linear-gradient(135deg, oklch(0.65 0.22 48), oklch(0.55 0.2 38))",
+                      "linear-gradient(135deg, oklch(0.45 0.12 152), oklch(0.38 0.1 152))",
                     color: "white",
                   }}
                   data-ocid="onboarding.save_goals.button"
