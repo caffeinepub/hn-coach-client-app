@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import OnboardingWizard, {
   isOnboardingDone,
@@ -11,19 +11,33 @@ import DashboardPage from "./pages/DashboardPage";
 
 export type AppView = "dashboard" | "admin";
 
+function isAdminHash(hash: string) {
+  return hash === "#admin" || hash === "#/admin";
+}
+
 export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
   const [view, setView] = useState<AppView>(() =>
-    window.location.hash === "#admin" ? "admin" : "dashboard",
+    isAdminHash(window.location.hash) ? "admin" : "dashboard",
   );
   const [onboardingComplete, setOnboardingComplete] = useState<boolean>(
     isOnboardingDone(),
   );
   const [dashboardTab, setDashboardTab] = useState<string>("home");
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (isAdminHash(window.location.hash)) {
+        setView("admin");
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
   const handleViewChange = (newView: AppView) => {
     setView(newView);
-    window.location.hash = newView === "admin" ? "#admin" : "";
+    window.location.hash = newView === "admin" ? "/admin" : "";
   };
 
   if (isInitializing) {
@@ -49,7 +63,6 @@ export default function App() {
     );
   }
 
-  // Admin panel — no header shown, full-page experience
   if (view === "admin") {
     return (
       <>
@@ -81,7 +94,6 @@ export default function App() {
       </main>
       <Toaster richColors theme="light" />
 
-      {/* Watermark footer */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center"
         style={{

@@ -274,8 +274,8 @@ export default function AuthPage() {
                 />
               </div>
               <span className="font-display font-extrabold text-lg tracking-tight">
-                <span className="gradient-fire-text">HN</span>{" "}
-                <span className="gradient-fire-text">Coach</span>
+                <span className="text-white">HN</span>{" "}
+                <span className="text-white">Coach</span>
               </span>
             </div>
 
@@ -285,7 +285,7 @@ export default function AuthPage() {
             <CardTitle className="font-display text-xl gradient-fire-text glow-text-intense mt-1">
               Welcome Back 🔥
             </CardTitle>
-            <CardDescription className="font-body text-foreground/70 text-xs">
+            <CardDescription className="font-body text-white text-xs">
               Your fitness journey starts here
             </CardDescription>
           </CardHeader>
