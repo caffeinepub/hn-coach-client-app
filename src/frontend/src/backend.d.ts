@@ -47,6 +47,11 @@ export interface FitnessClassView {
 }
 export interface UserProfile {
     name: string;
+    gender: Gender;
+}
+export enum Gender {
+    female = "female",
+    male = "male"
 }
 export enum UserRole {
     admin = "admin",

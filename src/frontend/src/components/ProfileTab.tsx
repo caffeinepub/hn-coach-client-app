@@ -71,7 +71,7 @@ export default function ProfileTab() {
 
   async function handleSave() {
     try {
-      await saveProfile.mutateAsync(name);
+      await saveProfile.mutateAsync({ name, gender: ext.gender || "male" });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(ext));
       toast.success("Profile saved successfully! 💪");
     } catch {

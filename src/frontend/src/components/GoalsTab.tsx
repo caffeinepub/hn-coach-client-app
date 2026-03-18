@@ -51,18 +51,18 @@ type MeasureKey = keyof Omit<BodyMeasurement, "date">;
 
 function PhotoUploadCard({
   label,
-  storageKey,
+  // storageKey kept for API compatibility
   ocidPrefix,
   required = false,
+  onFileChange,
 }: {
   label: string;
   storageKey: string;
   ocidPrefix: string;
   required?: boolean;
+  onFileChange?: (file: File | null) => void;
 }) {
-  const [imageUrl, setImageUrl] = useState<string | null>(() =>
-    localStorage.getItem(storageKey),
-  );
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -72,18 +72,15 @@ function PhotoUploadCard({
       toast.error("Image too large. Max 5MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target?.result as string;
-      setImageUrl(url);
-      localStorage.setItem(storageKey, url);
-    };
-    reader.readAsDataURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+    onFileChange?.(file);
   }
 
   function handleRemove() {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
     setImageUrl(null);
-    localStorage.removeItem(storageKey);
+    onFileChange?.(null);
   }
 
   return (
@@ -169,11 +166,11 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
   }
 
   const principalStr = principal.toString();
+  const [frontPhotoFile, setFrontPhotoFile] = useState<File | null>(null);
+  const [sidePhotoFile, setSidePhotoFile] = useState<File | null>(null);
 
   function handleSave() {
-    const frontKey = `hn_goals_front_${principalStr}`;
-    const sideKey = `hn_goals_side_${principalStr}`;
-    if (!localStorage.getItem(frontKey) || !localStorage.getItem(sideKey)) {
+    if (!frontPhotoFile || !sidePhotoFile) {
       toast.error(
         "Please upload both Front View and Side View progress photos to save your goals",
       );
@@ -224,12 +221,14 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
               storageKey={`hn_goals_front_${principalStr}`}
               ocidPrefix="goals.front_view"
               required
+              onFileChange={setFrontPhotoFile}
             />
             <PhotoUploadCard
               label="Side View"
               storageKey={`hn_goals_side_${principalStr}`}
               ocidPrefix="goals.side_view"
               required
+              onFileChange={setSidePhotoFile}
             />
           </div>
         </CardContent>

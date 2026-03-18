@@ -140,7 +140,7 @@ export default function AuthPage() {
       return;
     }
     try {
-      await saveProfile.mutateAsync(name.trim());
+      await saveProfile.mutateAsync({ name: name.trim(), gender: "male" });
       toast.success("Welcome to HN Coach!");
     } catch {
       toast.error("Failed to save profile");

@@ -72,18 +72,18 @@ function getNextSunday(thisSunday: string): string {
 
 function MeasurePhotoCard({
   label,
-  storageKey,
+  // storageKey kept for API compatibility
   ocidPrefix,
   required = false,
+  onFileChange,
 }: {
   label: string;
   storageKey: string;
   ocidPrefix: string;
   required?: boolean;
+  onFileChange?: (file: File | null) => void;
 }) {
-  const [imageUrl, setImageUrl] = useState<string | null>(() =>
-    localStorage.getItem(storageKey),
-  );
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -93,18 +93,15 @@ function MeasurePhotoCard({
       toast.error("Image too large. Max 5MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target?.result as string;
-      setImageUrl(url);
-      localStorage.setItem(storageKey, url);
-    };
-    reader.readAsDataURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+    onFileChange?.(file);
   }
 
   function handleRemove() {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
     setImageUrl(null);
-    localStorage.removeItem(storageKey);
+    onFileChange?.(null);
   }
 
   return (
@@ -270,11 +267,11 @@ export default function Measurements({ principal }: MeasurementsProps) {
   const logMeasurements = useLogMeasurements();
 
   const alreadyLoggedThisWeek = logs.some((l) => l.date === thisSunday);
+  const [frontPhotoFile, setFrontPhotoFile] = useState<File | null>(null);
+  const [sidePhotoFile, setSidePhotoFile] = useState<File | null>(null);
 
   const handleSubmit = async () => {
-    const frontKey = `hn_measure_front_${thisSunday}`;
-    const sideKey = `hn_measure_side_${thisSunday}`;
-    if (!localStorage.getItem(frontKey) || !localStorage.getItem(sideKey)) {
+    if (!frontPhotoFile || !sidePhotoFile) {
       toast.error(
         "Please upload both Front View and Side View photos for your weekly check-in",
       );
@@ -533,12 +530,14 @@ export default function Measurements({ principal }: MeasurementsProps) {
                         storageKey={`hn_measure_front_${thisSunday}`}
                         ocidPrefix="measurements.front_view"
                         required
+                        onFileChange={setFrontPhotoFile}
                       />
                       <MeasurePhotoCard
                         label="Side View"
                         storageKey={`hn_measure_side_${thisSunday}`}
                         ocidPrefix="measurements.side_view"
                         required
+                        onFileChange={setSidePhotoFile}
                       />
                     </div>
                   </div>

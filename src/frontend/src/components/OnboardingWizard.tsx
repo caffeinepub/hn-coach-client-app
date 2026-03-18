@@ -96,7 +96,10 @@ export default function OnboardingWizard({
     }
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(ext));
     try {
-      await saveProfile.mutateAsync(name.trim());
+      await saveProfile.mutateAsync({
+        name: name.trim(),
+        gender: ext.gender || "male",
+      });
     } catch (err) {
       console.warn(
         "Backend profile save failed, continuing with local save",

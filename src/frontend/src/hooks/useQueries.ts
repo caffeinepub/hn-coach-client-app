@@ -43,9 +43,14 @@ export function useSaveProfile() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (name: string) => {
+    mutationFn: async ({ name, gender }: { name: string; gender: string }) => {
       if (!actor) throw new Error("No actor");
-      return actor.saveCallerUserProfile({ name });
+      const backendGender =
+        gender?.toLowerCase() === "female" ? { female: null } : { male: null };
+      return actor.saveCallerUserProfile({
+        name,
+        gender: backendGender as any,
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["userProfile"] }),
   });

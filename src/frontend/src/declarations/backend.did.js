@@ -38,7 +38,8 @@ export const MealLog = IDL.Record({
   'imageUrl' : IDL.Opt(IDL.Text),
   'mealType' : IDL.Text,
 });
-export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const Gender = IDL.Variant({ 'female' : IDL.Null, 'male' : IDL.Null });
+export const UserProfile = IDL.Record({ 'name' : IDL.Text, 'gender' : Gender });
 export const FitnessClassView = IDL.Record({
   'id' : IDL.Nat,
   'enrolled' : IDL.Vec(IDL.Principal),
@@ -191,7 +192,8 @@ export const idlFactory = ({ IDL }) => {
     'imageUrl' : IDL.Opt(IDL.Text),
     'mealType' : IDL.Text,
   });
-  const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const Gender = IDL.Variant({ 'female' : IDL.Null, 'male' : IDL.Null });
+  const UserProfile = IDL.Record({ 'name' : IDL.Text, 'gender' : Gender });
   const FitnessClassView = IDL.Record({
     'id' : IDL.Nat,
     'enrolled' : IDL.Vec(IDL.Principal),

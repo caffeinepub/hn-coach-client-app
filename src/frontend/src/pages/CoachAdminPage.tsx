@@ -201,7 +201,7 @@ function PasswordGate({
 
 // ---- Client Tracking Tab ----
 function ClientCard({ principal }: { principal: Principal }) {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   const [expanded, setExpanded] = useState(false);
 
   const principalStr = principal.toString();
@@ -214,7 +214,8 @@ function ClientCard({ principal }: { principal: Principal }) {
       if (!actor) return null;
       return actor.getUserProfile(principal);
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
+    refetchOnMount: "always",
   });
 
   const { data: weightLogs, isLoading: weightLoading } = useQuery({
@@ -224,7 +225,8 @@ function ClientCard({ principal }: { principal: Principal }) {
       const result = await actor.getWeightLogs(principal);
       return result ?? [];
     },
-    enabled: !!actor && !isFetching && expanded,
+    enabled: !!actor && expanded,
+    refetchOnMount: "always",
   });
 
   const { data: mealLogs, isLoading: mealsLoading } = useQuery({
@@ -233,7 +235,8 @@ function ClientCard({ principal }: { principal: Principal }) {
       if (!actor) return [];
       return actor.getAllUserMealLogs(principal, TODAY);
     },
-    enabled: !!actor && !isFetching && expanded,
+    enabled: !!actor && expanded,
+    refetchOnMount: "always",
   });
 
   const { data: measurements, isLoading: measLoading } = useQuery({
@@ -243,7 +246,8 @@ function ClientCard({ principal }: { principal: Principal }) {
       const result = await actor.getMeasurementLogs(principal);
       return result ?? [];
     },
-    enabled: !!actor && !isFetching && expanded,
+    enabled: !!actor && expanded,
+    refetchOnMount: "always",
   });
 
   const latestMeasurement = measurements?.[measurements.length - 1];
@@ -367,6 +371,16 @@ function ClientCard({ principal }: { principal: Principal }) {
                     >
                       {profile.name}
                     </p>
+                    {profile.gender && (
+                      <p
+                        className="text-xs font-body mt-0.5"
+                        style={{ color: "oklch(0.5 0.03 260)" }}
+                      >
+                        {"female" in (profile.gender as any)
+                          ? "Female"
+                          : "Male"}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -535,15 +549,20 @@ function ClientCard({ principal }: { principal: Principal }) {
 }
 
 function ClientTrackingTab() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
 
-  const { data: allUsers, isLoading } = useQuery({
+  const {
+    data: allUsers,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["adminAllUsers"],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllUsers();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
+    refetchOnMount: "always",
   });
 
   if (isLoading) {
@@ -559,6 +578,20 @@ function ClientTrackingTab() {
         <span className="ml-2 font-body text-muted-foreground">
           Loading clients...
         </span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center py-20 gap-4"
+        data-ocid="admin.clients.error_state"
+      >
+        <p className="font-body text-muted-foreground text-center">
+          Unable to load clients. Please ensure you are logged in and try
+          refreshing.
+        </p>
       </div>
     );
   }
@@ -1047,14 +1080,15 @@ function PromotionsTab() {
 
 // ---- Stats Row ----
 function AdminStatsRow() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   const { data: allUsers } = useQuery({
     queryKey: ["adminAllUsers"],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllUsers();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
+    refetchOnMount: "always",
   });
   const { data: classes = [] } = useUpcomingClasses();
   const { data: promotions = [] } = useAllPromotions();

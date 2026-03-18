@@ -29,6 +29,8 @@ export interface FitnessClassView {
   'zoomLink' : [] | [string],
   'capacity' : bigint,
 }
+export type Gender = { 'female' : null } |
+  { 'male' : null };
 export interface MealLog {
   'date' : string,
   'note' : string,
@@ -43,7 +45,7 @@ export interface Promotion {
   'imageUrl' : [] | [string],
 }
 export type Time = bigint;
-export interface UserProfile { 'name' : string }
+export interface UserProfile { 'name' : string, 'gender' : Gender }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };

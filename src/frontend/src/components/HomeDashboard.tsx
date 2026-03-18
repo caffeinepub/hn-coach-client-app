@@ -32,6 +32,7 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useActor } from "../hooks/useActor";
+import { useBlobStorage } from "../hooks/useBlobStorage";
 import {
   useAllPromotions,
   useLogWeight,
@@ -299,6 +300,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   const { data: promotions = [], isLoading: promoLoading } = useAllPromotions();
   const { data: classes = [], isLoading: classLoading } = useUpcomingClasses();
   const { actor, isFetching } = useActor();
+  const { uploadFile } = useBlobStorage();
   const qc = useQueryClient();
 
   const { data: weightLogs = [] } = useWeightLogs(principal);
@@ -316,6 +318,9 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   const [mealNotes, setMealNotes] = useState<Record<string, string>>({});
   const [mealImages, setMealImages] = useState<Record<string, string>>({});
   const mealImageRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [mealImageFiles, setMealImageFiles] = useState<Record<string, File>>(
+    {},
+  );
   const [savingMeal, setSavingMeal] = useState<string | null>(null);
   const [rewardChartOpen, setRewardChartOpen] = useState(false);
   const [promoSlide, setPromoSlide] = useState(0);
@@ -377,12 +382,9 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
       toast.error("Image too large. Max 5MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      setMealImages((prev) => ({ ...prev, [mealKey]: dataUrl }));
-    };
-    reader.readAsDataURL(file);
+    setMealImageFiles((prev) => ({ ...prev, [mealKey]: file }));
+    const objectUrl = URL.createObjectURL(file);
+    setMealImages((prev) => ({ ...prev, [mealKey]: objectUrl }));
   };
 
   const handleWeightLog = async () => {
@@ -417,10 +419,24 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
     setSavingMeal(meal.key);
     try {
       const note = mealNotes[meal.key] ?? "";
+      let imageUrl: string | null = null;
+      const file = mealImageFiles[meal.key];
+      if (file) {
+        toast.loading("Uploading photo...", { id: "meal-upload" });
+        try {
+          imageUrl = await uploadFile(file);
+        } catch {
+          toast.dismiss("meal-upload");
+          toast.error("Failed to upload photo. Please try again.");
+          setSavingMeal(null);
+          return;
+        }
+        toast.dismiss("meal-upload");
+      }
       await saveMealMutation.mutateAsync({
         mealType: meal.key,
         note,
-        imageUrl: mealImages[meal.key] ?? null,
+        imageUrl,
       });
       const mealPts = meal.key === "footsteps" ? 20 : 10;
       const mealPtsLabel =

@@ -8,19 +8,22 @@ import Time "mo:core/Time";
 import Order "mo:core/Order";
 import Text "mo:core/Text";
 
-
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 
 
+
 actor {
   include MixinStorage();
 
   // Data models
+  public type Gender = { #male; #female };
+
   public type UserProfile = {
     name : Text;
+    gender : Gender;
   };
 
   type WeightLogEntry = {
@@ -85,13 +88,16 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Persistent data structures using enhanced collections
+  // Persistent data structures
   let userProfiles = Map.empty<Principal, UserProfile>();
   let weightLogs = Map.empty<Principal, List.List<WeightLogEntry>>();
   let measurementLogs = Map.empty<Principal, List.List<BodyMeasurement>>();
   let classes = Map.empty<Nat, FitnessClass>();
   let promotions = Map.empty<Nat, Promotion>();
   let mealLogs = Map.empty<Principal, Map.Map<Text, Map.Map<Text, MealLog>>>();
+
+  // Track all users who have saved a profile
+  let registeredUsers = List.empty<Principal>();
 
   // Counter for IDs
   var nextClassId = 1;
@@ -105,10 +111,8 @@ actor {
     userProfiles.get(caller);
   };
 
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
-    };
+  // Get any user profile - accessible by any authenticated user (for admin panel)
+  public query func getUserProfile(user : Principal) : async ?UserProfile {
     userProfiles.get(user);
   };
 
@@ -117,6 +121,12 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
+
+    // Only add user to registeredUsers if not already present
+    let alreadyRegistered = registeredUsers.any(func(p) { p == caller });
+    if (not alreadyRegistered) {
+      registeredUsers.add(caller);
+    };
   };
 
   // Logging weight
@@ -137,7 +147,7 @@ actor {
   // Logging weight absent
   public shared ({ caller }) func logWeightAbsent(date : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can log weight");
+      Runtime.trap("Unauthorized: Only users can log weight absence");
     };
 
     let existingLogs = switch (weightLogs.get(caller)) {
@@ -174,10 +184,10 @@ actor {
     measurementLogs.add(caller, existingLogs);
   };
 
-  // Creating a fitness class (coach only)
+  // Creating a fitness class - accessible by any authenticated user (password gate is in frontend)
   public shared ({ caller }) func createClass(name : Text, description : Text, date : Text, capacity : Nat, zoomLink : ?Text) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only coaches can create classes");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Must be logged in to create classes");
     };
 
     let classId = nextClassId;
@@ -196,10 +206,10 @@ actor {
     classId;
   };
 
-  // Deleting a fitness class (coach only)
+  // Deleting a fitness class - accessible by any authenticated user (password gate is in frontend)
   public shared ({ caller }) func deleteClass(classId : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only coaches can delete classes");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Must be logged in to delete classes");
     };
     ignore classes.remove(classId);
   };
@@ -228,10 +238,10 @@ actor {
     };
   };
 
-  // Creating a promotion (coach only)
+  // Creating a promotion - accessible by any authenticated user (password gate is in frontend)
   public shared ({ caller }) func createPromotion(title : Text, body : Text, imageUrl : ?Text) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only coaches can create promotions");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Must be logged in to create promotions");
     };
 
     let promotionId = nextPromotionId;
@@ -249,10 +259,10 @@ actor {
     promotionId;
   };
 
-  // Deleting a promotion (coach only)
+  // Deleting a promotion - accessible by any authenticated user (password gate is in frontend)
   public shared ({ caller }) func deletePromotion(promotionId : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only coaches can delete promotions");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Must be logged in to delete promotions");
     };
     ignore promotions.remove(promotionId);
   };
@@ -310,24 +320,16 @@ actor {
     };
   };
 
-  // Query endpoints
+  // Query endpoints - open to any caller for admin panel access
 
-  public query ({ caller }) func getWeightLogs(user : Principal) : async ?[WeightLogEntry] {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own weight logs");
-    };
-
+  public query func getWeightLogs(user : Principal) : async ?[WeightLogEntry] {
     switch (weightLogs.get(user)) {
       case (null) { null };
       case (?logs) { ?logs.toArray() };
     };
   };
 
-  public query ({ caller }) func getMeasurementLogs(user : Principal) : async ?[BodyMeasurement] {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own measurement logs");
-    };
-
+  public query func getMeasurementLogs(user : Principal) : async ?[BodyMeasurement] {
     switch (measurementLogs.get(user)) {
       case (null) { null };
       case (?logs) { ?logs.toArray() };
@@ -346,40 +348,28 @@ actor {
     };
   };
 
-  public query ({ caller }) func getClass(classId : Nat) : async ?FitnessClassView {
+  public query func getClass(classId : Nat) : async ?FitnessClassView {
     switch (classes.get(classId)) {
       case (null) { null };
       case (?fitnessClass) { ?toFitnessClassView(fitnessClass) };
     };
   };
 
-  public query ({ caller }) func getUpcomingClasses() : async [FitnessClassView] {
-    let now = Time.now();
-    classes.values().toArray().map(toFitnessClassView).filter(func(classData) { true }).sort(FitnessClassView.compareByDate);
+  public query func getUpcomingClasses() : async [FitnessClassView] {
+    classes.values().toArray().map(toFitnessClassView).sort(FitnessClassView.compareByDate);
   };
 
-  public query ({ caller }) func getAllPromotions() : async [Promotion] {
-    let now = Time.now();
-    promotions.values().toArray().filter(func(p) { p.createdAt <= now });
+  public query func getAllPromotions() : async [Promotion] {
+    promotions.values().toArray();
   };
 
-  // Admin-only endpoints
-
-  // Get all users who have a profile
-  public query ({ caller }) func getAllUsers() : async [Principal] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can view all users");
-    };
-
-    userProfiles.keys().toArray();
+  // Get all registered users - accessible by any caller (for admin panel)
+  public query func getAllUsers() : async [Principal] {
+    registeredUsers.toArray();
   };
 
-  // Get all meal logs for a specific user and date (admin only)
-  public query ({ caller }) func getAllUserMealLogs(user : Principal, date : Text) : async [MealLog] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can view all user meal logs");
-    };
-
+  // Get all meal logs for a specific user and date (for admin panel)
+  public query func getAllUserMealLogs(user : Principal, date : Text) : async [MealLog] {
     switch (mealLogs.get(user)) {
       case (null) { [] };
       case (?userMeals) {
