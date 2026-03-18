@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import type { Principal } from "@icp-sdk/core/principal";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Calendar,
@@ -23,14 +23,16 @@ import {
   Lock,
   Megaphone,
   Plus,
+  RefreshCw,
   Trash2,
   Users,
   Video,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import type { backendInterface as FullBackendInterface } from "../backend.d";
 import { useActor } from "../hooks/useActor";
 import { useBlobStorage } from "../hooks/useBlobStorage";
 import {
@@ -203,6 +205,7 @@ function PasswordGate({
 function ClientCard({ principal }: { principal: Principal }) {
   const { actor } = useActor();
   const [expanded, setExpanded] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const principalStr = principal.toString();
   const shortPrincipal = `${principalStr.slice(0, 8)}...`;
@@ -212,372 +215,647 @@ function ClientCard({ principal }: { principal: Principal }) {
     queryKey: ["adminUserProfile", principalStr],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getUserProfile(principal);
+      try {
+        return await actor.getUserProfile(principal);
+      } catch {
+        return null;
+      }
     },
     enabled: !!actor,
     refetchOnMount: "always",
   });
 
-  const { data: weightLogs, isLoading: weightLoading } = useQuery({
+  const { data: weightLogs = [], isLoading: weightLoading } = useQuery({
     queryKey: ["adminWeightLogs", principalStr],
     queryFn: async () => {
       if (!actor) return [];
-      const result = await actor.getWeightLogs(principal);
-      return result ?? [];
+      try {
+        const result = await actor.getWeightLogs(principal);
+        return result ?? [];
+      } catch {
+        return [];
+      }
     },
     enabled: !!actor && expanded,
     refetchOnMount: "always",
   });
 
-  const { data: mealLogs, isLoading: mealsLoading } = useQuery({
+  const { data: mealLogs = [], isLoading: mealsLoading } = useQuery({
     queryKey: ["adminMealLogs", principalStr, TODAY],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllUserMealLogs(principal, TODAY);
+      try {
+        return await actor.getAllUserMealLogs(principal, TODAY);
+      } catch {
+        return [];
+      }
     },
     enabled: !!actor && expanded,
     refetchOnMount: "always",
   });
 
-  const { data: measurements, isLoading: measLoading } = useQuery({
+  const { data: measurements = [], isLoading: measLoading } = useQuery({
     queryKey: ["adminMeasurements", principalStr],
     queryFn: async () => {
       if (!actor) return [];
-      const result = await actor.getMeasurementLogs(principal);
-      return result ?? [];
+      try {
+        const result = await actor.getMeasurementLogs(principal);
+        return result ?? [];
+      } catch {
+        return [];
+      }
     },
     enabled: !!actor && expanded,
     refetchOnMount: "always",
   });
 
-  const latestMeasurement = measurements?.[measurements.length - 1];
-  const recentWeightLogs = weightLogs?.slice(-7) ?? [];
+  const sortedMeasurements = [...measurements].sort((a, b) =>
+    b.date.localeCompare(a.date),
+  );
+  const latestMeasurement = sortedMeasurements[0] ?? null;
+  const recentWeightLogs = [...weightLogs]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 7);
+
+  // ---- Coach Comments ----
+  const qc = useQueryClient();
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
+    {},
+  );
+
+  const { data: activityComments = [] } = useQuery<
+    Array<{ activityKey: string; comment: string; createdAt: bigint }>
+  >({
+    queryKey: ["adminComments", principalStr],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const result = await (
+          actor as unknown as FullBackendInterface
+        ).getActivityComments(principal);
+        if (!Array.isArray(result)) return [];
+        return result;
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && expanded,
+    refetchOnMount: "always",
+  });
+
+  const commentMap: Record<string, string> = {};
+  if (Array.isArray(activityComments)) {
+    for (const c of activityComments) {
+      if (
+        c &&
+        typeof c.activityKey === "string" &&
+        typeof c.comment === "string"
+      ) {
+        commentMap[c.activityKey] = c.comment;
+      }
+    }
+  }
+
+  const saveComment = useMutation({
+    mutationFn: async ({
+      activityKey,
+      comment,
+    }: { activityKey: string; comment: string }) => {
+      if (!actor) throw new Error("No actor");
+      return (actor as unknown as FullBackendInterface).saveActivityComment(
+        principal,
+        activityKey,
+        comment,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["adminComments", principalStr] });
+      // Also notify the user's dashboard comment cache
+      qc.invalidateQueries({ queryKey: ["coachComments", principalStr] });
+      toast.success("Comment saved ✓");
+      setCommentInputs((prev) => ({ ...prev, [variables.activityKey]: "" }));
+    },
+    onError: () => toast.error("Failed to save comment"),
+  });
+
+  // Safe gender display — profile.gender is a TypeScript enum string ("female"/"male")
+  function getGenderLabel(gender: unknown): string {
+    if (!gender) return "";
+    const g = String(gender).toLowerCase();
+    if (g === "female") return "Female";
+    if (g === "male") return "Male";
+    // Fallback: handle object variant { female: null } or { male: null }
+    if (typeof gender === "object") {
+      if ("female" in (gender as object)) return "Female";
+      if ("male" in (gender as object)) return "Male";
+    }
+    return String(gender);
+  }
+
   const initials = profileLoading
     ? "?"
     : (profile?.name
         ?.split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .slice(0, 2)
         .toUpperCase() ?? "U");
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl overflow-hidden"
-      style={{
-        background: "oklch(1 0 0)",
-        border: "1px solid oklch(0.91 0.01 260)",
-        boxShadow: "0 2px 10px oklch(0.15 0.02 260 / 0.06)",
-      }}
-    >
-      {/* Card Header */}
-      <button
-        type="button"
-        className="w-full px-5 py-4 flex items-center justify-between gap-3 hover:bg-muted/40 transition-colors"
-        onClick={() => setExpanded((p) => !p)}
-        data-ocid="admin.client.toggle"
+  function getCommentValue(key: string): string {
+    return commentInputs[key] ?? commentMap[key] ?? "";
+  }
+
+  function renderCommentBox(activityKey: string) {
+    return (
+      <div
+        className="mt-2 pt-2"
+        style={{ borderTop: "1px solid oklch(0.92 0.02 290)" }}
       >
-        <div className="flex items-center gap-4">
-          <div
-            className="w-11 h-11 rounded-full flex items-center justify-center font-display font-bold text-white text-sm flex-shrink-0"
+        <p
+          className="text-xs font-body font-semibold mb-1"
+          style={{ color: "oklch(0.55 0.18 290)" }}
+        >
+          HN Coach
+        </p>
+        <div className="flex gap-1.5">
+          <input
+            type="text"
+            placeholder="Add coach comment..."
+            value={getCommentValue(activityKey)}
+            onChange={(e) =>
+              setCommentInputs((prev) => ({
+                ...prev,
+                [activityKey]: e.target.value,
+              }))
+            }
+            className="flex-1 text-xs rounded-lg px-2 py-1 border font-body"
             style={{
-              background:
-                "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
-              boxShadow: "0 3px 10px oklch(0.68 0.16 290 / 0.3)",
+              border: "1px solid oklch(0.88 0.02 290)",
+              background: "oklch(0.98 0.01 290)",
+              color: "oklch(0.2 0.02 260)",
             }}
+            data-ocid="admin.comment.input"
+          />
+          <button
+            type="button"
+            onClick={() =>
+              saveComment.mutate({
+                activityKey,
+                comment: getCommentValue(activityKey),
+              })
+            }
+            disabled={saveComment.isPending}
+            className="px-2 py-1 text-xs rounded-full font-body font-semibold transition-all disabled:opacity-50"
+            style={{
+              background: "oklch(0.68 0.16 290)",
+              color: "white",
+            }}
+            data-ocid="admin.comment.save_button"
           >
-            {initials}
-          </div>
-          <div className="text-left">
-            <div className="flex items-center gap-2">
+            Save
+          </button>
+        </div>
+        {commentMap[activityKey] && !commentInputs[activityKey] && (
+          <p
+            className="text-xs mt-0.5 font-body"
+            style={{ color: "oklch(0.55 0.12 290)" }}
+          >
+            💬 {commentMap[activityKey]}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: "oklch(1 0 0)",
+          border: "1px solid oklch(0.91 0.01 260)",
+          boxShadow: "0 2px 10px oklch(0.15 0.02 260 / 0.06)",
+        }}
+      >
+        {/* Card Header / Toggle */}
+        <button
+          type="button"
+          className="w-full px-5 py-4 flex items-center justify-between gap-3 hover:bg-muted/40 transition-colors"
+          onClick={() => setExpanded((p) => !p)}
+          data-ocid="admin.client.toggle"
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center font-display font-bold text-white text-sm flex-shrink-0"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.58 0.18 290) 100%)",
+                boxShadow: "0 3px 10px oklch(0.68 0.16 290 / 0.3)",
+              }}
+            >
+              {initials}
+            </div>
+            <div className="text-left">
               <p className="font-body font-semibold text-foreground text-sm">
                 {profileLoading
                   ? "Loading..."
                   : (profile?.name ?? "Unknown User")}
               </p>
-            </div>
-            <p
-              className="font-mono text-xs mt-0.5"
-              style={{ color: "oklch(0.62 0.04 260)" }}
-            >
-              {shortPrincipal}
-            </p>
-            <div
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold mt-1 w-fit"
-              style={{
-                background: "oklch(0.68 0.16 290 / 0.12)",
-                border: "1px solid oklch(0.68 0.16 290 / 0.25)",
-                color: "oklch(0.58 0.18 290)",
-              }}
-            >
-              <span>🪙</span>
-              <span>{userPoints} pts</span>
+              <p
+                className="font-mono text-xs mt-0.5"
+                style={{ color: "oklch(0.62 0.04 260)" }}
+              >
+                {shortPrincipal}
+              </p>
+              <div
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold mt-1 w-fit"
+                style={{
+                  background: "oklch(0.68 0.16 290 / 0.12)",
+                  border: "1px solid oklch(0.68 0.16 290 / 0.25)",
+                  color: "oklch(0.58 0.18 290)",
+                }}
+              >
+                <span>🪙</span>
+                <span>{userPoints} pts</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {!expanded && !profileLoading && profile && (
-            <div className="hidden sm:flex items-center gap-2">
-              {weightLogs === undefined && (
-                <Badge variant="secondary" className="text-xs font-body">
-                  <span className="mr-1">⚖️</span> Click to load
-                </Badge>
-              )}
-            </div>
-          )}
-          {expanded ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          )}
-        </div>
-      </button>
+          <div className="flex items-center gap-3">
+            {expanded ? (
+              <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            )}
+          </div>
+        </button>
 
-      {/* Expanded Content */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            style={{ overflow: "hidden" }}
-          >
-            <div
-              className="px-5 pb-6 space-y-5"
-              style={{
-                borderTop: "1px solid oklch(0.93 0.01 260)",
-                paddingTop: "1.25rem",
-              }}
+        {/* Expanded Content */}
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{ overflow: "hidden" }}
             >
-              {/* Profile details */}
-              {profile && (
-                <div
-                  className="rounded-xl p-4 flex items-center gap-3"
-                  style={{ background: "oklch(0.975 0.005 260)" }}
-                >
-                  <div>
+              <div
+                className="px-5 pb-6 space-y-5"
+                style={{
+                  borderTop: "1px solid oklch(0.93 0.01 260)",
+                  paddingTop: "1.25rem",
+                }}
+              >
+                {/* Profile Details */}
+                {profile ? (
+                  <div
+                    className="rounded-xl p-4"
+                    style={{ background: "oklch(0.975 0.005 260)" }}
+                  >
                     <p
-                      className="text-xs font-body"
+                      className="text-xs font-body uppercase tracking-wider mb-2 font-semibold"
                       style={{ color: "oklch(0.6 0.03 260)" }}
                     >
-                      Name
+                      Profile
                     </p>
                     <p
-                      className="text-sm font-body font-semibold mt-0.5"
+                      className="text-sm font-body font-semibold"
                       style={{ color: "oklch(0.2 0.02 260)" }}
                     >
                       {profile.name}
                     </p>
-                    {profile.gender && (
+                    {profile.gender != null && (
                       <p
                         className="text-xs font-body mt-0.5"
                         style={{ color: "oklch(0.5 0.03 260)" }}
                       >
-                        {"female" in (profile.gender as any)
-                          ? "Female"
-                          : "Male"}
+                        {getGenderLabel(profile.gender)}
                       </p>
                     )}
                   </div>
-                </div>
-              )}
-
-              {/* Weight Logs Section */}
-              <div>
-                <h4
-                  className="font-display font-bold text-xs uppercase tracking-widest mb-2"
-                  style={{ color: "oklch(0.45 0.18 220)" }}
-                >
-                  ⚖️ Weight Log (Last 7 entries)
-                </h4>
-                {weightLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Loading...
-                  </div>
-                ) : recentWeightLogs.length === 0 ? (
-                  <p className="text-xs text-muted-foreground font-body italic">
-                    No weight logs yet
-                  </p>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {recentWeightLogs.map((log) => (
-                      <div
-                        key={log.date}
-                        className="rounded-lg px-3 py-2 text-center"
-                        style={{ background: "oklch(0.97 0.008 220)" }}
-                      >
-                        <p
-                          className="text-xs font-body"
-                          style={{ color: "oklch(0.55 0.03 260)" }}
-                        >
-                          {log.date.slice(5)}
-                        </p>
-                        <p
-                          className="font-display font-bold text-sm mt-0.5"
-                          style={{
-                            color: log.absent
-                              ? "oklch(0.6 0.1 25)"
-                              : "oklch(0.38 0.16 220)",
-                          }}
-                        >
-                          {log.absent ? "Absent" : `${log.weight}kg`}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Today's Meals Section */}
-              <div>
-                <h4
-                  className="font-display font-bold text-xs uppercase tracking-widest mb-2"
-                  style={{ color: "oklch(0.58 0.18 290)" }}
-                >
-                  🍽️ Today's Meals ({TODAY})
-                </h4>
-                {mealsLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Loading...
-                  </div>
-                ) : !mealLogs || mealLogs.length === 0 ? (
-                  <p className="text-xs text-muted-foreground font-body italic">
-                    No meals logged today
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {mealLogs.map((log) => (
-                      <div
-                        key={log.mealType}
-                        className="rounded-lg px-3 py-2 flex items-start gap-3"
-                        style={{ background: "oklch(0.97 0.03 290)" }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className="text-xs font-body font-semibold capitalize"
-                            style={{ color: "oklch(0.68 0.16 290)" }}
-                          >
-                            {log.mealType.replace(/_/g, " ")}
-                          </p>
-                          {log.note && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                              {log.note}
-                            </p>
-                          )}
-                        </div>
-                        {log.imageUrl && (
-                          <img
-                            src={log.imageUrl}
-                            alt={log.mealType}
-                            className="w-12 h-12 object-cover rounded-lg flex-shrink-0 border border-border"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Measurements Section */}
-              <div>
-                <h4
-                  className="font-display font-bold text-xs uppercase tracking-widest mb-2"
-                  style={{ color: "oklch(0.68 0.16 290)" }}
-                >
-                  📏 Latest Measurements
-                </h4>
-                {measLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Loading...
-                  </div>
-                ) : !latestMeasurement ? (
-                  <p className="text-xs text-muted-foreground font-body italic">
-                    No measurements yet
-                  </p>
-                ) : (
-                  <div
-                    className="rounded-xl px-4 py-3"
-                    style={{ background: "oklch(0.97 0.03 290)" }}
-                  >
-                    <p
-                      className="text-xs font-body mb-3"
-                      style={{ color: "oklch(0.55 0.04 260)" }}
-                    >
-                      Logged on {latestMeasurement.date}
+                  !profileLoading && (
+                    <p className="text-xs text-muted-foreground font-body italic">
+                      No profile saved yet
                     </p>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: "Chest", value: latestMeasurement.chest },
-                        { label: "Waist", value: latestMeasurement.waist },
-                        { label: "Hips", value: latestMeasurement.hips },
-                      ].map((m) => (
+                  )
+                )}
+
+                {/* Weight Logs */}
+                <div>
+                  <h4
+                    className="font-display font-bold text-xs uppercase tracking-widest mb-2"
+                    style={{ color: "oklch(0.45 0.18 220)" }}
+                  >
+                    ⚖️ Weight Log +30 pts (Last 7 entries)
+                  </h4>
+                  {weightLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                    </div>
+                  ) : recentWeightLogs.length === 0 ? (
+                    <p className="text-xs text-muted-foreground font-body italic">
+                      No weight logs yet
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {recentWeightLogs.map((log) => (
                         <div
-                          key={m.label}
-                          className="text-center rounded-lg py-2"
-                          style={{ background: "oklch(0.94 0.04 290)" }}
+                          key={`weight-${log.date}`}
+                          className="rounded-lg px-3 py-2"
+                          style={{ background: "oklch(0.97 0.008 220)" }}
                         >
-                          <p
-                            className="text-xs font-body"
-                            style={{ color: "oklch(0.62 0.12 290)" }}
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p
+                              className="text-xs font-body"
+                              style={{ color: "oklch(0.55 0.03 260)" }}
+                            >
+                              {log.date}
+                            </p>
+                            <p
+                              className="font-display font-bold text-sm"
+                              style={{
+                                color: log.absent
+                                  ? "oklch(0.6 0.1 25)"
+                                  : "oklch(0.38 0.16 220)",
+                              }}
+                            >
+                              {log.absent
+                                ? "Absent"
+                                : `${Number(log.weight)}kg`}
+                            </p>
+                          </div>
+                          {renderCommentBox(`weight-${log.date}`)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Today's Meals */}
+                <div>
+                  <h4
+                    className="font-display font-bold text-xs uppercase tracking-widest mb-2"
+                    style={{ color: "oklch(0.58 0.18 290)" }}
+                  >
+                    🍽️ Today's Meals +10 pts each ({TODAY})
+                  </h4>
+                  {mealsLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                    </div>
+                  ) : mealLogs.length === 0 ? (
+                    <p className="text-xs text-muted-foreground font-body italic">
+                      No meals logged today
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {mealLogs.map((log) => (
+                        <div
+                          key={`meal-${log.mealType}`}
+                          className="rounded-lg overflow-hidden"
+                          style={{ background: "oklch(0.97 0.03 290)" }}
+                        >
+                          <div className="px-3 py-2 flex items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p
+                                className="text-xs font-body font-semibold capitalize"
+                                style={{ color: "oklch(0.68 0.16 290)" }}
+                              >
+                                {String(log.mealType ?? "").replace(/_/g, " ")}
+                              </p>
+                              {log.note && (
+                                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                  {log.note}
+                                </p>
+                              )}
+                            </div>
+                            {log.imageUrl && (
+                              <button
+                                type="button"
+                                className="flex-shrink-0 bg-transparent border-0 p-0"
+                                onClick={() => setLightboxUrl(log.imageUrl!)}
+                                aria-label="View full image"
+                              >
+                                <img
+                                  src={log.imageUrl}
+                                  alt={String(log.mealType ?? "")}
+                                  className="w-20 h-20 object-cover rounded-lg border border-border hover:opacity-90 transition-opacity"
+                                  onError={(e) => {
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = "none";
+                                  }}
+                                />
+                              </button>
+                            )}
+                          </div>
+                          <div className="px-3 pb-2">
+                            {renderCommentBox(`meal-${TODAY}-${log.mealType}`)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Measurements */}
+                <div>
+                  <h4
+                    className="font-display font-bold text-xs uppercase tracking-widest mb-2"
+                    style={{ color: "oklch(0.68 0.16 290)" }}
+                  >
+                    📏 Latest Measurements +50 pts
+                  </h4>
+                  {measLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                    </div>
+                  ) : !latestMeasurement ? (
+                    <p className="text-xs text-muted-foreground font-body italic">
+                      No measurements yet
+                    </p>
+                  ) : (
+                    <div
+                      className="rounded-xl px-4 py-3"
+                      style={{ background: "oklch(0.97 0.03 290)" }}
+                    >
+                      <p
+                        className="text-xs font-body mb-3"
+                        style={{ color: "oklch(0.55 0.04 260)" }}
+                      >
+                        Logged on {latestMeasurement.date}
+                      </p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { label: "Chest", value: latestMeasurement.chest },
+                          { label: "Waist", value: latestMeasurement.waist },
+                          { label: "Hips", value: latestMeasurement.hips },
+                        ].map((m) => (
+                          <div
+                            key={m.label}
+                            className="text-center rounded-lg py-2"
+                            style={{ background: "oklch(0.94 0.04 290)" }}
                           >
-                            {m.label}
-                          </p>
-                          <p
-                            className="font-display font-bold text-base mt-0.5"
-                            style={{ color: "oklch(0.58 0.18 290)" }}
+                            <p
+                              className="text-xs font-body"
+                              style={{ color: "oklch(0.62 0.12 290)" }}
+                            >
+                              {m.label}
+                            </p>
+                            <p
+                              className="font-display font-bold text-base mt-0.5"
+                              style={{ color: "oklch(0.58 0.18 290)" }}
+                            >
+                              {Number(m.value ?? 0)}
+                              <span className="text-xs font-normal ml-0.5">
+                                cm
+                              </span>
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      {renderCommentBox(
+                        `measurement-${latestMeasurement.date}`,
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* All Coach Comments Summary */}
+                {activityComments.length > 0 && (
+                  <div>
+                    <h4
+                      className="font-display font-bold text-xs uppercase tracking-widest mb-2"
+                      style={{ color: "oklch(0.55 0.18 290)" }}
+                    >
+                      💬 All Comments ({activityComments.length})
+                    </h4>
+                    <div className="space-y-1.5">
+                      {activityComments.map((c, idx) => (
+                        <div
+                          key={`${c.activityKey}-${idx}`}
+                          className="rounded-lg px-3 py-2 text-xs font-body"
+                          style={{ background: "oklch(0.96 0.03 290)" }}
+                        >
+                          <span
+                            className="font-semibold"
+                            style={{ color: "oklch(0.55 0.18 290)" }}
                           >
-                            {m.value}
-                            <span className="text-xs font-normal ml-0.5">
-                              cm
-                            </span>
-                          </p>
+                            {String(c.activityKey ?? "").replace(/-/g, " ")}:
+                          </span>{" "}
+                          <span style={{ color: "oklch(0.3 0.02 260)" }}>
+                            {c.comment}
+                          </span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.85)" }}
+        >
+          <button
+            type="button"
+            className="absolute inset-0 w-full h-full cursor-default opacity-0"
+            aria-label="Close lightbox"
+            onClick={() => setLightboxUrl(null)}
+          />
+          <div className="relative max-w-screen-md w-full px-4 z-10">
+            <button
+              type="button"
+              onClick={() => setLightboxUrl(null)}
+              className="absolute -top-10 right-4 text-white text-2xl font-bold"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <img
+              src={lightboxUrl}
+              alt="Full view"
+              className="w-full max-h-screen object-contain rounded-xl"
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
 function ClientTrackingTab() {
-  const { actor } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
+  const [readyToFetch, setReadyToFetch] = useState(false);
+
+  // Add 1-second delay before first fetch to allow ICP actor to settle
+  useEffect(() => {
+    const timer = setTimeout(() => setReadyToFetch(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const {
     data: allUsers,
     isLoading,
     isError,
+    refetch,
+    isFetching,
   } = useQuery({
     queryKey: ["adminAllUsers"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllUsers();
+      const users = await actor.getAllUsers();
+      return users;
     },
-    enabled: !!actor,
+    enabled: !!actor && !actorFetching && readyToFetch,
     refetchOnMount: "always",
+    retry: 3,
+    retryDelay: 2000,
   });
+
+  const refreshBtn = (
+    <button
+      type="button"
+      onClick={() => refetch()}
+      disabled={isFetching}
+      className="flex items-center gap-1.5 text-xs font-body font-semibold px-3 py-1.5 rounded-lg transition-all"
+      style={{
+        background: "oklch(0.68 0.16 290 / 0.12)",
+        border: "1px solid oklch(0.68 0.16 290 / 0.25)",
+        color: "oklch(0.55 0.18 290)",
+      }}
+      data-ocid="admin.clients.refresh_button"
+    >
+      <RefreshCw
+        className={`w-3.5 h-3.5${isFetching ? " animate-spin" : ""}`}
+      />
+      {isFetching ? "Refreshing..." : "Refresh"}
+    </button>
+  );
 
   if (isLoading) {
     return (
-      <div
-        className="flex items-center justify-center py-16"
-        data-ocid="admin.clients.loading_state"
-      >
-        <Loader2
-          className="w-6 h-6 animate-spin"
-          style={{ color: "oklch(0.68 0.16 290)" }}
-        />
-        <span className="ml-2 font-body text-muted-foreground">
-          Loading clients...
-        </span>
+      <div className="space-y-4">
+        <div className="flex justify-end">{refreshBtn}</div>
+        <div
+          className="flex items-center justify-center py-16"
+          data-ocid="admin.clients.loading_state"
+        >
+          <Loader2
+            className="w-6 h-6 animate-spin"
+            style={{ color: "oklch(0.68 0.16 290)" }}
+          />
+          <span className="ml-2 font-body text-muted-foreground">
+            Loading clients...
+          </span>
+        </div>
       </div>
     );
   }
@@ -592,6 +870,7 @@ function ClientTrackingTab() {
           Unable to load clients. Please ensure you are logged in and try
           refreshing.
         </p>
+        {refreshBtn}
       </div>
     );
   }
@@ -609,17 +888,22 @@ function ClientTrackingTab() {
           <Users className="w-8 h-8" style={{ color: "oklch(0.6 0.04 260)" }} />
         </div>
         <p className="font-body text-muted-foreground text-center">
-          No clients registered yet
+          No clients yet. Ask clients to log in and save their data, then tap
+          Refresh.
         </p>
+        {refreshBtn}
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <p className="font-body text-sm text-muted-foreground">
-        {allUsers.length} registered client{allUsers.length !== 1 ? "s" : ""}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="font-body text-sm text-muted-foreground">
+          {allUsers.length} registered client{allUsers.length !== 1 ? "s" : ""}
+        </p>
+        {refreshBtn}
+      </div>
       {allUsers.map((principal, i) => (
         <div
           key={principal.toString()}
@@ -1080,14 +1364,14 @@ function PromotionsTab() {
 
 // ---- Stats Row ----
 function AdminStatsRow() {
-  const { actor } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
   const { data: allUsers } = useQuery({
     queryKey: ["adminAllUsers"],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllUsers();
     },
-    enabled: !!actor,
+    enabled: !!actor && !actorFetching,
     refetchOnMount: "always",
   });
   const { data: classes = [] } = useUpcomingClasses();

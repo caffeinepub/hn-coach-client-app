@@ -63,6 +63,7 @@ export default function OnboardingWizard({
   const [step, setStep] = useState(1);
   const { data: profile } = useUserProfile();
   const saveProfile = useSaveProfile();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [ext, setExt] = useState<ExtProfile>(DEFAULT_EXT);
@@ -94,19 +95,19 @@ export default function OnboardingWizard({
       toast.error("Please enter your full name");
       return;
     }
+    setSaveError(null);
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(ext));
     try {
       await saveProfile.mutateAsync({
         name: name.trim(),
         gender: ext.gender || "male",
       });
+      setStep(2);
     } catch (err) {
-      console.warn(
-        "Backend profile save failed, continuing with local save",
-        err,
-      );
+      const msg = err instanceof Error ? err.message : "Failed to save profile";
+      setSaveError(msg);
+      toast.error("Profile save failed. Please try again.");
     }
-    setStep(2);
   }
 
   function handleSaveGoals() {
@@ -234,6 +235,21 @@ export default function OnboardingWizard({
           <div className="px-8 py-6 space-y-4 max-h-[60vh] overflow-y-auto">
             {step === 1 ? (
               <>
+                {/* Save error message */}
+                {saveError && (
+                  <div
+                    className="rounded-xl px-4 py-3 text-sm font-body"
+                    style={{
+                      background: "oklch(0.95 0.04 25)",
+                      border: "1px solid oklch(0.80 0.12 25)",
+                      color: "oklch(0.45 0.16 25)",
+                    }}
+                    data-ocid="onboarding.save_error"
+                  >
+                    ⚠️ {saveError}. Please check your connection and try again.
+                  </div>
+                )}
+
                 {/* Avatar preview */}
                 <div className="flex justify-center mb-2">
                   <Avatar

@@ -84,6 +84,12 @@ actor {
     date : Text;
   };
 
+  public type ActivityComment = {
+    activityKey : Text;
+    comment : Text;
+    createdAt : Time.Time;
+  };
+
   // Authorization state
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -95,6 +101,9 @@ actor {
   let classes = Map.empty<Nat, FitnessClass>();
   let promotions = Map.empty<Nat, Promotion>();
   let mealLogs = Map.empty<Principal, Map.Map<Text, Map.Map<Text, MealLog>>>();
+
+  // Activity comments: keyed by user principal -> activityKey -> comment
+  let activityComments = Map.empty<Principal, Map.Map<Text, ActivityComment>>();
 
   // Track all users who have saved a profile
   let registeredUsers = List.empty<Principal>();
@@ -142,6 +151,8 @@ actor {
     let newEntry : WeightLogEntry = { date; weight; absent = false };
     existingLogs.add(newEntry);
     weightLogs.add(caller, existingLogs);
+    let alreadyReg1 = registeredUsers.any(func(p) { p == caller });
+    if (not alreadyReg1) { registeredUsers.add(caller); };
   };
 
   // Logging weight absent
@@ -157,6 +168,8 @@ actor {
     let newEntry : WeightLogEntry = { date; weight = 0.0; absent = true };
     existingLogs.add(newEntry);
     weightLogs.add(caller, existingLogs);
+    let alreadyReg2 = registeredUsers.any(func(p) { p == caller });
+    if (not alreadyReg2) { registeredUsers.add(caller); };
   };
 
   // Logging body measurements
@@ -182,6 +195,8 @@ actor {
     };
     existingLogs.add(measurement);
     measurementLogs.add(caller, existingLogs);
+    let alreadyReg3 = registeredUsers.any(func(p) { p == caller });
+    if (not alreadyReg3) { registeredUsers.add(caller); };
   };
 
   // Creating a fitness class - accessible by any authenticated user (password gate is in frontend)
@@ -302,6 +317,8 @@ actor {
     };
 
     mealLogs.add(caller, userMeals);
+    let alreadyReg4 = registeredUsers.any(func(p) { p == caller });
+    if (not alreadyReg4) { registeredUsers.add(caller); };
   };
 
   public query ({ caller }) func getTodayMealLogs(date : Text) : async [MealLog] {
@@ -378,6 +395,36 @@ actor {
           case (?dayToMeals) { dayToMeals.values().toArray() };
         };
       };
+    };
+  };
+
+  // Activity comments - coach saves a comment for a user's activity
+  // activityKey format: "weight-{date}", "meal-{date}-{mealType}", "measurement-{date}"
+  public shared ({ caller }) func saveActivityComment(user : Principal, activityKey : Text, comment : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Must be logged in to comment");
+    };
+
+    let userComments = switch (activityComments.get(user)) {
+      case (null) { Map.empty<Text, ActivityComment>() };
+      case (?existing) { existing };
+    };
+
+    let newComment : ActivityComment = {
+      activityKey;
+      comment;
+      createdAt = Time.now();
+    };
+
+    userComments.add(activityKey, newComment);
+    activityComments.add(user, userComments);
+  };
+
+  // Get all activity comments for a user - open query (for user dashboard and admin panel)
+  public query func getActivityComments(user : Principal) : async [ActivityComment] {
+    switch (activityComments.get(user)) {
+      case (null) { [] };
+      case (?userComments) { userComments.values().toArray() };
     };
   };
 };

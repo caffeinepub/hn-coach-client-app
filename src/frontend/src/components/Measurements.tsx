@@ -26,6 +26,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import type { BodyMeasurement } from "../backend";
+import { useBlobStorage } from "../hooks/useBlobStorage";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useLogMeasurements, useMeasurementLogs } from "../hooks/useQueries";
 import { awardPoints } from "../utils/points";
@@ -89,8 +90,8 @@ function MeasurePhotoCard({
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large. Max 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large. Max 10MB.");
       return;
     }
     const objectUrl = URL.createObjectURL(file);
@@ -263,6 +264,7 @@ export default function Measurements({ principal }: MeasurementsProps) {
   const nextSunday = getNextSunday(thisSunday);
 
   const { identity } = useInternetIdentity();
+  const { uploadFile } = useBlobStorage();
   const { data: logs = [], isLoading } = useMeasurementLogs(principal);
   const logMeasurements = useLogMeasurements();
 
@@ -297,6 +299,16 @@ export default function Measurements({ principal }: MeasurementsProps) {
       return;
     }
     try {
+      toast.info("Uploading photos...", { duration: 3000 });
+      try {
+        await Promise.all([
+          uploadFile(frontPhotoFile),
+          uploadFile(sidePhotoFile),
+        ]);
+      } catch {
+        toast.error("Photo upload failed. Please try again.");
+        return;
+      }
       await logMeasurements.mutateAsync({ date: thisSunday, ...parsed });
       if (identity) {
         awardPoints(

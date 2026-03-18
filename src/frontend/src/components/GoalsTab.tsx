@@ -9,6 +9,7 @@ import { Camera, Ruler, Save, Scale, Target, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { BodyMeasurement } from "../backend";
+import { useBlobStorage } from "../hooks/useBlobStorage";
 import { useMeasurementLogs, useWeightLogs } from "../hooks/useQueries";
 
 export const GOALS_STORAGE_KEY = "hn_coach_goals";
@@ -68,8 +69,8 @@ function PhotoUploadCard({
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large. Max 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large. Max 10MB.");
       return;
     }
     const objectUrl = URL.createObjectURL(file);
@@ -168,17 +169,31 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
   const principalStr = principal.toString();
   const [frontPhotoFile, setFrontPhotoFile] = useState<File | null>(null);
   const [sidePhotoFile, setSidePhotoFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { uploadFile } = useBlobStorage();
 
-  function handleSave() {
+  async function handleSave() {
     if (!frontPhotoFile || !sidePhotoFile) {
       toast.error(
         "Please upload both Front View and Side View progress photos to save your goals",
       );
       return;
     }
-    localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals));
-    toast.success("Goals saved! Keep pushing! 🎯");
-    onSaved?.();
+    setIsSaving(true);
+    try {
+      toast.info("Uploading photos...", { duration: 3000 });
+      await Promise.all([
+        uploadFile(frontPhotoFile),
+        uploadFile(sidePhotoFile),
+      ]);
+      localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals));
+      toast.success("Goals saved! Keep pushing! 🎯");
+      onSaved?.();
+    } catch {
+      toast.error("Photo upload failed. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const weightGoalNum = Number.parseFloat(goals.targetWeight);
@@ -356,13 +371,14 @@ export default function GoalsTab({ principal, onSaved }: GoalsTabProps) {
         <CardContent className="pt-4">
           <Button
             onClick={handleSave}
+            disabled={isSaving}
             className="w-full font-body font-semibold"
             style={{ background: "oklch(0.68 0.16 290)", color: "white" }}
             data-ocid="goals.save.button"
           >
             <Target className="w-4 h-4 mr-2" />
             <Save className="w-4 h-4 mr-2" />
-            Save Goals
+            {isSaving ? "Saving..." : "Save Goals"}
           </Button>
         </CardContent>
       </Card>

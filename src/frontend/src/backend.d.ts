@@ -58,6 +58,11 @@ export enum UserRole {
     user = "user",
     guest = "guest"
 }
+export interface ActivityComment {
+    activityKey: string;
+    comment: string;
+    createdAt: bigint;
+}
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createClass(name: string, description: string, date: string, capacity: bigint, zoomLink: string | null): Promise<bigint>;
@@ -82,4 +87,6 @@ export interface backendInterface {
     logWeightAbsent(date: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveMealLog(mealType: string, note: string, imageUrl: string | null, date: string): Promise<void>;
+    saveActivityComment(user: Principal, activityKey: string, comment: string): Promise<void>;
+    getActivityComments(user: Principal): Promise<Array<ActivityComment>>;
 }

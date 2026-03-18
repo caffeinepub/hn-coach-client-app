@@ -54,6 +54,11 @@ export interface WeightLogEntry {
   'date' : string,
   'absent' : boolean,
 }
+export interface ActivityComment {
+  'activityKey' : string,
+  'comment' : string,
+  'createdAt' : Time,
+}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -117,6 +122,8 @@ export interface _SERVICE {
     [string, string, [] | [string], string],
     undefined
   >,
+  'saveActivityComment' : ActorMethod<[Principal, string, string], undefined>,
+  'getActivityComments' : ActorMethod<[Principal], Array<ActivityComment>>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

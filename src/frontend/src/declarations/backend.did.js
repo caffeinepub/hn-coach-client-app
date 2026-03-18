@@ -65,6 +65,12 @@ export const WeightLogEntry = IDL.Record({
   'absent' : IDL.Bool,
 });
 
+
+export const ActivityComment = IDL.Record({
+  'activityKey' : IDL.Text,
+  'comment' : IDL.Text,
+  'createdAt' : IDL.Int,
+});
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
       [IDL.Vec(IDL.Nat8)],
@@ -152,6 +158,8 @@ export const idlService = IDL.Service({
   'logWeight' : IDL.Func([IDL.Text, IDL.Float64], [], []),
   'logWeightAbsent' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveActivityComment' : IDL.Func([IDL.Principal, IDL.Text, IDL.Text], [], []),
+  'getActivityComments' : IDL.Func([IDL.Principal], [IDL.Vec(ActivityComment)], ['query']),
   'saveMealLog' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
       [],
@@ -217,6 +225,11 @@ export const idlFactory = ({ IDL }) => {
     'weight' : IDL.Float64,
     'date' : IDL.Text,
     'absent' : IDL.Bool,
+  });
+  const ActivityComment = IDL.Record({
+    'activityKey' : IDL.Text,
+    'comment' : IDL.Text,
+    'createdAt' : IDL.Int,
   });
   
   return IDL.Service({
@@ -306,6 +319,10 @@ export const idlFactory = ({ IDL }) => {
     'logWeight' : IDL.Func([IDL.Text, IDL.Float64], [], []),
     'logWeightAbsent' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveActivityComment' : IDL.Func([IDL.Principal, IDL.Text, IDL.Text], [], []),
+    'getActivityComments' : IDL.Func([IDL.Principal], [IDL.Vec(ActivityComment)], ['query']),
+  'saveActivityComment' : IDL.Func([IDL.Principal, IDL.Text, IDL.Text], [], []),
+  'getActivityComments' : IDL.Func([IDL.Principal], [IDL.Vec(ActivityComment)], ['query']),
     'saveMealLog' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
         [],

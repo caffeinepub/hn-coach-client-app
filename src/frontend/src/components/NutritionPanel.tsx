@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { nutrients } from "../data/nutrients";
 
 interface NutritionPanelProps {
@@ -8,31 +8,33 @@ interface NutritionPanelProps {
 export default function NutritionPanel({ activityCount }: NutritionPanelProps) {
   const [displayed, setDisplayed] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const prevActivityCount = useRef(-1);
 
-  useEffect(() => {
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
-        86400000,
-    );
-    const idx = (dayOfYear + activityCount) % nutrients.length;
-    if (idx !== displayed) {
-      setAnimating(true);
-      setTimeout(() => {
-        setDisplayed(idx);
-        setAnimating(false);
-      }, 350);
-    }
-  }, [activityCount, displayed]);
-
+  // On mount: set initial index based on day of year
   useEffect(() => {
     const dayOfYear = Math.floor(
       (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
         86400000,
     );
     setDisplayed(dayOfYear % nutrients.length);
+    prevActivityCount.current = 0;
   }, []);
 
+  // After each new activity: advance to next nutrient
+  useEffect(() => {
+    if (prevActivityCount.current < 0) return; // skip mount
+    if (activityCount === prevActivityCount.current) return;
+    prevActivityCount.current = activityCount;
+
+    setAnimating(true);
+    setTimeout(() => {
+      setDisplayed((prev) => (prev + 1) % nutrients.length);
+      setAnimating(false);
+    }, 350);
+  }, [activityCount]);
+
   const nutrient = nutrients[displayed];
+  const isMacro = nutrient.category === "macro";
 
   return (
     <div
@@ -48,14 +50,24 @@ export default function NutritionPanel({ activityCount }: NutritionPanelProps) {
       }}
     >
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-2xl">🧬</span>
+        <span className="text-2xl">{isMacro ? "💪" : "🧬"}</span>
+        <div className="flex-1">
+          <span
+            className="text-xs font-bold uppercase tracking-widest block"
+            style={{ color: "oklch(0.58 0.18 290)" }}
+          >
+            {isMacro ? "Macronutrient" : "Micronutrient"} Tip
+          </span>
+        </div>
         <span
-          className="text-xs font-bold uppercase tracking-widest"
-          style={{ color: "oklch(0.58 0.18 290)" }}
+          className="text-xs px-2 py-0.5 rounded-full font-semibold"
+          style={{
+            background: isMacro
+              ? "oklch(0.68 0.16 290 / 0.15)"
+              : "oklch(0.55 0.15 290 / 0.12)",
+            color: "oklch(0.55 0.18 290)",
+          }}
         >
-          Nutrition Tip
-        </span>
-        <span className="ml-auto text-xs text-muted-foreground">
           {displayed + 1}/{nutrients.length}
         </span>
       </div>

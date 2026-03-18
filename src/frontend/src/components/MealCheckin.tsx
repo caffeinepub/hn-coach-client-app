@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useActor } from "../hooks/useActor";
+import { useBlobStorage } from "../hooks/useBlobStorage";
 
 interface MealItem {
   key: string;
@@ -80,10 +81,12 @@ function getMealProgressColor(count: number): string {
 export default function MealCheckin() {
   const { actor, isFetching } = useActor();
   const qc = useQueryClient();
+  const { uploadFile } = useBlobStorage();
 
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [mealImages, setMealImages] = useState<Record<string, string>>({});
+  const [mealFiles, setMealFiles] = useState<Record<string, File>>({});
   const mealImageRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const { data: todayLogs = [], isLoading } = useQuery({
@@ -99,9 +102,10 @@ export default function MealCheckin() {
     mutationFn: async ({
       mealType,
       note,
-    }: { mealType: string; note: string }) => {
+      imageUrl,
+    }: { mealType: string; note: string; imageUrl: string | null }) => {
       if (!actor) throw new Error("No actor");
-      return actor.saveMealLog(mealType, note, null, TODAY);
+      return actor.saveMealLog(mealType, note, imageUrl, TODAY);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["mealLogs"] });
@@ -114,8 +118,8 @@ export default function MealCheckin() {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large. Max 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large. Max 10MB.");
       return;
     }
     const reader = new FileReader();
@@ -124,6 +128,7 @@ export default function MealCheckin() {
       setMealImages((prev) => ({ ...prev, [mealKey]: dataUrl }));
     };
     reader.readAsDataURL(file);
+    setMealFiles((prev) => ({ ...prev, [mealKey]: file }));
   };
 
   const handleSave = async (meal: MealItem) => {
@@ -134,9 +139,31 @@ export default function MealCheckin() {
     setSavingKey(meal.key);
     try {
       const note = notes[meal.key] ?? "";
-      await saveMutation.mutateAsync({ mealType: meal.key, note });
+      let imageUrl: string | null = null;
+      const file = mealFiles[meal.key];
+      if (file) {
+        toast.info("Uploading photo...", { duration: 2000 });
+        try {
+          imageUrl = await uploadFile(file);
+        } catch {
+          toast.error("Photo upload failed. Please try again.");
+          setSavingKey(null);
+          return;
+        }
+      }
+      await saveMutation.mutateAsync({ mealType: meal.key, note, imageUrl });
       toast.success(`${meal.emoji} ${meal.label} logged!`);
       setNotes((prev) => ({ ...prev, [meal.key]: "" }));
+      setMealImages((prev) => {
+        const next = { ...prev };
+        delete next[meal.key];
+        return next;
+      });
+      setMealFiles((prev) => {
+        const next = { ...prev };
+        delete next[meal.key];
+        return next;
+      });
     } catch {
       toast.error(`Failed to save ${meal.label}. Try again.`);
     } finally {
@@ -405,13 +432,18 @@ export default function MealCheckin() {
                             />
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
                                 setMealImages((prev) => {
                                   const next = { ...prev };
                                   delete next[meal.key];
                                   return next;
-                                })
-                              }
+                                });
+                                setMealFiles((prev) => {
+                                  const next = { ...prev };
+                                  delete next[meal.key];
+                                  return next;
+                                });
+                              }}
                               className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                               data-ocid={`meals.close_button.${i + 1}`}
                             >

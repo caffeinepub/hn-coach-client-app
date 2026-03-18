@@ -2,17 +2,25 @@ import { HttpAgent } from "@icp-sdk/core/agent";
 import { useState } from "react";
 import { loadConfig } from "../config";
 import { StorageClient } from "../utils/StorageClient";
+import { useInternetIdentity } from "./useInternetIdentity";
 
 export function useBlobStorage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const { identity } = useInternetIdentity();
 
   const uploadFile = async (file: File): Promise<string> => {
     setIsUploading(true);
     setUploadProgress(0);
     try {
       const config = await loadConfig();
-      const agent = new HttpAgent({ host: config.backend_host });
+      const agentOptions: Record<string, unknown> = {
+        host: config.backend_host,
+      };
+      if (identity) {
+        agentOptions.identity = identity;
+      }
+      const agent = new HttpAgent(agentOptions);
       if (config.backend_host?.includes("localhost")) {
         await agent.fetchRootKey().catch(() => {});
       }

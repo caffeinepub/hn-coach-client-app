@@ -1,5 +1,5 @@
 export const POINTS_CONFIG = {
-  weight: 20,
+  weight: 30,
   meal: 10,
   footsteps: 20,
   measurements: 50,
@@ -51,23 +51,6 @@ export function awardPoints(
   );
 }
 
-export function redeemPoints(principalStr: string, amount: number): void {
-  const current = getPoints(principalStr);
-  const newTotal = Math.max(0, current - amount);
-  localStorage.setItem(storageKey(principalStr), String(newTotal));
-
-  const history = getPointsHistory(principalStr);
-  history.unshift({
-    label: `Cashback redeemed ($${(amount / 100).toFixed(2)})`,
-    amount: -amount,
-    timestamp: Date.now(),
-  });
-  localStorage.setItem(
-    historyKey(principalStr),
-    JSON.stringify(history.slice(0, 50)),
-  );
-}
-
 function todayStr(): string {
   return new Date().toISOString().split("T")[0];
 }
@@ -92,7 +75,7 @@ export function getBonusStreak(principalStr: string): number {
   if (sorted.length === 0) return 0;
 
   let streak = 0;
-  let expected = new Date(todayStr());
+  const expected = new Date(todayStr());
 
   for (const d of sorted) {
     const expectedStr = expected.toISOString().split("T")[0];

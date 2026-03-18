@@ -310,6 +310,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   const [weightImage, setWeightImage] = useState<string | null>(() =>
     localStorage.getItem(WEIGHT_IMAGE_KEY),
   );
+  const [weightImageFile, setWeightImageFile] = useState<File | null>(null);
   const weightFileRef = useRef<HTMLInputElement>(null);
 
   const todayWeightEntry = weightLogs.find((l) => l.date === TODAY);
@@ -332,6 +333,39 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   );
   const [activityCount, setActivityCount] = useState(0);
   const onActivity = () => setActivityCount((c) => c + 1);
+  const [celebrationMsg, setCelebrationMsg] = useState<string | null>(null);
+  const showCelebration = (msg: string) => {
+    setCelebrationMsg(msg);
+    setTimeout(() => setCelebrationMsg(null), 2500);
+  };
+
+  // ---- Coach Comments ----
+  const { data: coachComments = [] } = useQuery({
+    queryKey: ["coachComments", principalStr],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return (actor as any).getActivityComments(principal) as Promise<
+          Array<{ activityKey: string; comment: string; createdAt: bigint }>
+        >;
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 60000,
+  });
+
+  const coachCommentMap = coachComments.reduce(
+    (
+      acc: Record<string, string>,
+      c: { activityKey: string; comment: string },
+    ) => {
+      acc[c.activityKey] = c.comment;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   const { data: todayMealLogs = [] } = useQuery({
     queryKey: ["mealLogs", TODAY],
@@ -359,17 +393,14 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   const handleWeightImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large. Max 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large. Max 10MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      setWeightImage(dataUrl);
-      localStorage.setItem(WEIGHT_IMAGE_KEY, dataUrl);
-    };
-    reader.readAsDataURL(file);
+    setWeightImageFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setWeightImage(objectUrl);
+    localStorage.removeItem(WEIGHT_IMAGE_KEY);
   };
 
   const handleMealImageSelect = (
@@ -378,8 +409,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large. Max 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large. Max 10MB.");
       return;
     }
     setMealImageFiles((prev) => ({ ...prev, [mealKey]: file }));
@@ -397,15 +428,29 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
       return;
     }
     try {
+      // Upload weight image to blob storage if available
+      if (weightImageFile) {
+        toast.loading("Uploading photo...", { id: "weight-upload" });
+        try {
+          await uploadFile(weightImageFile);
+        } catch {
+          toast.dismiss("weight-upload");
+          toast.error("Failed to upload photo. Please try a smaller image.");
+          return;
+        }
+        toast.dismiss("weight-upload");
+      }
       await logWeight.mutateAsync({
         date: TODAY,
         weight: Number.parseFloat(weightInput),
       });
-      awardPoints(principalStr, 20, "Weight logged");
+      awardPoints(principalStr, 30, "Weight logged");
       setPointsTotal(getPoints(principalStr));
-      toast.success("Weight logged! +20 pts 🪙");
+      showCelebration("🎉 +30 pts — Weight logged!");
+      toast.success("Weight logged! +30 pts 🪙");
       onActivity();
       setWeightInput("");
+      setWeightImageFile(null);
     } catch {
       toast.error("Failed to log weight");
     }
@@ -444,6 +489,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
           ? "Footsteps logged"
           : `${meal.label} checked in`;
       awardPoints(principalStr, mealPts, mealPtsLabel);
+      showCelebration(`🎉 +${mealPts} pts — ${mealPtsLabel}!`);
 
       // Check daily all-check-in bonus
       const allMealKeys = [
@@ -476,6 +522,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
         const allMealsDone = allMealKeys.every((k) => loggedKeys.has(k));
         if (allMealsDone && weightDoneToday) {
           awardPoints(principalStr, 50, "Daily all-check-in bonus!");
+          showCelebration("🏆 +50 bonus pts — All check-ins done!");
           localStorage.setItem(bonusDateKey, TODAY);
           const result = recordDailyBonus(principalStr);
           toast.success("🎉 Daily bonus! +50 pts");
@@ -566,6 +613,35 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
         animate="show"
         className="flex-1 min-w-0 space-y-4"
       >
+        {/* ── 1. MOTIVATIONAL DAILY UPDATE (TOP) ── */}
+        <motion.div variants={itemVariants} data-ocid="home.motivation.card">
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.5 0.22 30) 60%, oklch(0.45 0.18 15) 100%)",
+              boxShadow: "0 3px 16px oklch(0.68 0.16 290 / 0.22)",
+            }}
+          >
+            <div className="px-4 py-3 flex items-center gap-3">
+              <span className="text-2xl shrink-0">💪</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-display font-bold text-sm leading-snug">
+                  {dailyQuote}
+                </p>
+                <p className="text-white/55 text-xs font-body mt-0.5">
+                  Welcome, {profile?.name ?? "there"} ·{" "}
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* ── 2. TOP STRIP: Hot Promotions + Classes slideshows ── */}
         <motion.div variants={itemVariants} className="space-y-2">
           {/* Hot Promotions Slideshow */}
@@ -725,128 +801,8 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
           </div>
         </motion.div>
 
-        {/* ── 1. MOTIVATIONAL DAILY UPDATE (TOP) ── */}
-        <motion.div variants={itemVariants} data-ocid="home.motivation.card">
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{
-              background:
-                "linear-gradient(135deg, oklch(0.68 0.16 290) 0%, oklch(0.5 0.22 30) 60%, oklch(0.45 0.18 15) 100%)",
-              boxShadow: "0 3px 16px oklch(0.68 0.16 290 / 0.22)",
-            }}
-          >
-            <div className="px-4 py-3 flex items-center gap-3">
-              <span className="text-2xl shrink-0">💪</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-display font-bold text-sm leading-snug">
-                  {dailyQuote}
-                </p>
-                <p className="text-white/55 text-xs font-body mt-0.5">
-                  Welcome, {profile?.name ?? "there"} ·{" "}
-                  {new Date().toLocaleDateString("en-US", {
-                    weekday: "long",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ── 1.5 POINTS CARD ── */}
+        {/* ── HN POINTS & REWARDS (merged) ── */}
         <motion.div variants={itemVariants} data-ocid="home.points.card">
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{
-              background:
-                "linear-gradient(135deg, oklch(0.93 0.07 290), oklch(0.89 0.09 290))",
-              border: "1.5px solid oklch(0.68 0.16 290 / 0.4)",
-              boxShadow: "0 4px 20px oklch(0.68 0.16 290 / 0.18)",
-            }}
-          >
-            {/* Top strip */}
-            <div
-              className="h-0.5 w-full"
-              style={{
-                background:
-                  "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
-              }}
-            />
-            <div className="px-4 py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{
-                    background: "oklch(0.68 0.16 290 / 0.2)",
-                    border: "1px solid oklch(0.68 0.16 290 / 0.3)",
-                  }}
-                >
-                  <span className="text-xl">🪙</span>
-                </div>
-                <div>
-                  <p
-                    className="font-display font-extrabold text-2xl leading-none"
-                    style={{ color: "oklch(0.42 0.22 290)" }}
-                  >
-                    {pointsTotal.toLocaleString()}
-                  </p>
-                  <p
-                    className="text-xs font-body font-semibold"
-                    style={{ color: "oklch(0.5 0.14 290)" }}
-                  >
-                    HN Reward Points
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1 shrink-0" />
-            </div>
-            {/* Last 3 earned */}
-            {getPointsHistory(principalStr).slice(0, 3).length > 0 && (
-              <div
-                className="px-4 pb-3 space-y-0.5"
-                style={{ borderTop: "1px solid oklch(0.68 0.16 290 / 0.1)" }}
-              >
-                <p
-                  className="text-xs font-body pt-2"
-                  style={{ color: "oklch(0.4 0.08 290)" }}
-                >
-                  Recent activity
-                </p>
-                {getPointsHistory(principalStr)
-                  .slice(0, 3)
-                  .map((entry) => (
-                    <div
-                      key={`${entry.timestamp}-${entry.label}`}
-                      className="flex items-center justify-between"
-                    >
-                      <span
-                        className="text-xs font-body"
-                        style={{ color: "oklch(0.35 0.06 290)" }}
-                      >
-                        {entry.label}
-                      </span>
-                      <span
-                        className="text-xs font-bold font-display"
-                        style={{
-                          color:
-                            entry.amount > 0
-                              ? "oklch(0.68 0.16 290)"
-                              : "oklch(0.6 0.18 25)",
-                        }}
-                      >
-                        {entry.amount > 0 ? "+" : ""}
-                        {entry.amount} pts
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* ── MILESTONE REWARD CHART ── */}
-        <motion.div variants={itemVariants} data-ocid="home.milestone.card">
           {(() => {
             const streak = getBonusStreak(principalStr);
             const milestones = getMilestoneCount(principalStr);
@@ -895,8 +851,10 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                   background:
                     "linear-gradient(135deg, oklch(0.93 0.07 290), oklch(0.89 0.09 290))",
                   border: "1.5px solid oklch(0.68 0.16 290 / 0.4)",
+                  boxShadow: "0 4px 20px oklch(0.68 0.16 290 / 0.18)",
                 }}
               >
+                {/* Top accent strip */}
                 <div
                   className="h-0.5 w-full"
                   style={{
@@ -904,27 +862,101 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                       "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setRewardChartOpen((o) => !o)}
-                  className="w-full px-4 pt-3 pb-1 flex items-center justify-between hover:bg-white/5 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🏆</span>
-                    <span className="font-display font-bold text-sm text-foreground">
-                      Milestone Reward Chart
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-xs font-body px-2 py-0.5 rounded-full"
+                {/* Points total row */}
+                <div className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                       style={{
-                        background: "oklch(0.68 0.16 290 / 0.15)",
-                        color: "oklch(0.68 0.16 290)",
+                        background: "oklch(0.68 0.16 290 / 0.2)",
+                        border: "1px solid oklch(0.68 0.16 290 / 0.3)",
                       }}
                     >
-                      {milestones} milestone{milestones !== 1 ? "s" : ""}
-                    </span>
+                      <span className="text-xl">🪙</span>
+                    </div>
+                    <div>
+                      <p
+                        className="font-display font-extrabold text-2xl leading-none"
+                        style={{ color: "oklch(0.42 0.22 290)" }}
+                      >
+                        {pointsTotal.toLocaleString()}
+                      </p>
+                      <p
+                        className="text-xs font-body font-semibold"
+                        style={{ color: "oklch(0.5 0.14 290)" }}
+                      >
+                        HN Reward Points
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className="text-xs font-body px-2 py-0.5 rounded-full shrink-0"
+                    style={{
+                      background: "oklch(0.68 0.16 290 / 0.15)",
+                      color: "oklch(0.68 0.16 290)",
+                    }}
+                  >
+                    {milestones} milestone{milestones !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                {/* Recent activity */}
+                {getPointsHistory(principalStr).slice(0, 3).length > 0 && (
+                  <div
+                    className="px-4 pb-2 space-y-0.5"
+                    style={{
+                      borderTop: "1px solid oklch(0.68 0.16 290 / 0.1)",
+                    }}
+                  >
+                    <p
+                      className="text-xs font-body pt-2"
+                      style={{ color: "oklch(0.4 0.08 290)" }}
+                    >
+                      Recent activity
+                    </p>
+                    {getPointsHistory(principalStr)
+                      .slice(0, 3)
+                      .map((entry) => (
+                        <div
+                          key={`${entry.timestamp}-${entry.label}`}
+                          className="flex items-center justify-between"
+                        >
+                          <span
+                            className="text-xs font-body"
+                            style={{ color: "oklch(0.35 0.06 290)" }}
+                          >
+                            {entry.label}
+                          </span>
+                          <span
+                            className="text-xs font-bold font-display"
+                            style={{
+                              color:
+                                entry.amount > 0
+                                  ? "oklch(0.68 0.16 290)"
+                                  : "oklch(0.6 0.18 25)",
+                            }}
+                          >
+                            {entry.amount > 0 ? "+" : ""}
+                            {entry.amount} pts
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                {/* Collapsible milestone chart divider */}
+                <div
+                  style={{ borderTop: "1px solid oklch(0.68 0.16 290 / 0.15)" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setRewardChartOpen((o) => !o)}
+                    className="w-full px-4 pt-3 pb-1 flex items-center justify-between hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🏆</span>
+                      <span className="font-display font-bold text-sm text-foreground">
+                        Milestone Reward Chart
+                      </span>
+                    </div>
                     <svg
                       role="img"
                       aria-label="toggle rewards chart"
@@ -946,111 +978,111 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                         d="M19 9l-7 7-7-7"
                       />
                     </svg>
-                  </div>
-                </button>
-                {!rewardChartOpen && (
-                  <p
-                    className="px-4 pb-2 text-xs font-body"
-                    style={{ color: "oklch(0.55 0.06 260)" }}
-                  >
-                    Tap to see your rewards chart
-                  </p>
-                )}
-                {rewardChartOpen && (
-                  <div>
-                    {/* collapsible content start */}
-                    {/* Streak bar */}
-                    <div className="px-4 pb-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <span
-                          className="text-xs font-body"
-                          style={{ color: "oklch(0.6 0.08 60)" }}
-                        >
-                          🔥 Daily streak: {streak}/7 days
-                        </span>
-                        <span
-                          className="text-xs font-body"
-                          style={{ color: "oklch(0.68 0.16 290)" }}
-                        >
-                          {streak >= 7
-                            ? "Milestone earned!"
-                            : `${7 - streak} days to go`}
-                        </span>
-                      </div>
-                      <div
-                        className="h-1.5 rounded-full overflow-hidden"
-                        style={{ background: "oklch(0.82 0.08 290)" }}
-                      >
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(100, (streak / 7) * 100)}%`,
-                            background:
-                              "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
-                          }}
-                        />
-                      </div>
-                    </div>
-                    {/* Tiers */}
-                    <div className="px-3 pb-3 space-y-1.5">
-                      {tiers.map((tier) => (
-                        <div
-                          key={tier.label}
-                          className="flex items-center justify-between px-3 py-2 rounded-lg"
-                          style={{
-                            background:
-                              tier.achieved || tier.daily
-                                ? "oklch(0.68 0.16 290 / 0.1)"
-                                : "oklch(0.86 0.06 290)",
-                            border: `1px solid ${tier.achieved || tier.daily ? "oklch(0.68 0.16 290 / 0.35)" : "oklch(0.78 0.08 290)"}`,
-                            opacity: !tier.achieved && !tier.daily ? 0.6 : 1,
-                          }}
-                        >
-                          <div>
-                            <p
-                              className="text-xs font-body font-semibold"
-                              style={{
-                                color:
-                                  tier.achieved || tier.daily
-                                    ? "oklch(0.85 0.12 60)"
-                                    : "oklch(0.38 0.12 290)",
-                              }}
-                            >
-                              {tier.label}
-                            </p>
-                            <p
-                              className="text-xs font-body"
-                              style={{ color: "oklch(0.5 0.08 290)" }}
-                            >
-                              {tier.sub}
-                            </p>
-                          </div>
+                  </button>
+                  {!rewardChartOpen && (
+                    <p
+                      className="px-4 pb-3 text-xs font-body"
+                      style={{ color: "oklch(0.55 0.06 260)" }}
+                    >
+                      Tap to see your rewards chart ↑
+                    </p>
+                  )}
+                  {rewardChartOpen && (
+                    <div>
+                      {/* Streak bar */}
+                      <div className="px-4 pb-2">
+                        <div className="flex items-center justify-between mb-1">
                           <span
-                            className="text-xs font-display font-bold px-2 py-0.5 rounded-full shrink-0"
+                            className="text-xs font-body"
+                            style={{ color: "oklch(0.6 0.08 60)" }}
+                          >
+                            🔥 Daily streak: {streak}/7 days
+                          </span>
+                          <span
+                            className="text-xs font-body"
+                            style={{ color: "oklch(0.68 0.16 290)" }}
+                          >
+                            {streak >= 7
+                              ? "Milestone earned!"
+                              : `${7 - streak} days to go`}
+                          </span>
+                        </div>
+                        <div
+                          className="h-1.5 rounded-full overflow-hidden"
+                          style={{ background: "oklch(0.82 0.08 290)" }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              width: `${Math.min(100, (streak / 7) * 100)}%`,
+                              background:
+                                "linear-gradient(90deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {/* Tiers */}
+                      <div className="px-3 pb-3 space-y-1.5">
+                        {tiers.map((tier) => (
+                          <div
+                            key={tier.label}
+                            className="flex items-center justify-between px-3 py-2 rounded-lg"
                             style={{
                               background:
                                 tier.achieved || tier.daily
-                                  ? "oklch(0.68 0.16 290 / 0.2)"
-                                  : "oklch(0.82 0.06 290)",
-                              color:
-                                tier.achieved || tier.daily
-                                  ? "oklch(0.68 0.16 290)"
-                                  : "oklch(0.45 0.12 290)",
+                                  ? "oklch(0.68 0.16 290 / 0.1)"
+                                  : "oklch(0.86 0.06 290)",
+                              border: `1px solid ${tier.achieved || tier.daily ? "oklch(0.68 0.16 290 / 0.35)" : "oklch(0.78 0.08 290)"}`,
+                              opacity: !tier.achieved && !tier.daily ? 0.6 : 1,
                             }}
                           >
-                            {tier.pts}
-                          </span>
-                        </div>
-                      ))}
+                            <div>
+                              <p
+                                className="text-xs font-body font-semibold"
+                                style={{
+                                  color: tier.daily
+                                    ? "black"
+                                    : tier.achieved
+                                      ? "oklch(0.85 0.12 60)"
+                                      : "oklch(0.38 0.12 290)",
+                                }}
+                              >
+                                {tier.label}
+                              </p>
+                              <p
+                                className="text-xs font-body"
+                                style={{ color: "oklch(0.5 0.08 290)" }}
+                              >
+                                {tier.sub}
+                              </p>
+                            </div>
+                            <span
+                              className="text-xs font-display font-bold px-2 py-0.5 rounded-full shrink-0"
+                              style={{
+                                background:
+                                  tier.achieved || tier.daily
+                                    ? "oklch(0.68 0.16 290 / 0.2)"
+                                    : "oklch(0.82 0.06 290)",
+                                color:
+                                  tier.achieved || tier.daily
+                                    ? "oklch(0.68 0.16 290)"
+                                    : "oklch(0.45 0.12 290)",
+                              }}
+                            >
+                              {tier.pts}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}{" "}
-                {/* collapsible content end */}
+                  )}
+                </div>
               </div>
             );
           })()}
         </motion.div>
 
+        <NutritionPanel activityCount={activityCount} />
         {/* ── 3. QUICK WEIGHT LOG ── */}
         <motion.div variants={itemVariants} data-ocid="home.weight.card">
           <div
@@ -1100,7 +1132,7 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
                         color: "white",
                       }}
                     >
-                      +20 pts
+                      +30 pts
                     </span>
                   </div>
                   <div className="flex gap-2 items-center">
@@ -1199,9 +1231,27 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
               )}
             </div>
           </div>
+          {/* Coach comment badge for weight */}
+          {coachCommentMap[`weight-${TODAY}`] && (
+            <div
+              className="mt-1.5 px-3 py-2 rounded-xl flex items-start gap-2"
+              style={{
+                background: "oklch(0.95 0.04 290)",
+                border: "1px solid oklch(0.88 0.06 290 / 0.4)",
+              }}
+            >
+              <span className="text-sm">💬</span>
+              <p
+                className="text-xs font-body"
+                style={{ color: "oklch(0.35 0.12 290)" }}
+              >
+                <span className="font-semibold">HN Coach: </span>
+                {coachCommentMap[`weight-${TODAY}`]}
+              </p>
+            </div>
+          )}
         </motion.div>
 
-        <NutritionPanel activityCount={activityCount} />
         {/* ── 4. TODAY'S MEALS ── */}
         <motion.section variants={itemVariants} data-ocid="home.meals.section">
           <div className="flex items-center gap-2 mb-3">
@@ -1324,32 +1374,55 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
 
                     <div className="px-3 py-2">
                       {isLogged ? (
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs text-muted-foreground font-body flex-1 truncate">
-                            {existingLog.note
-                              ? `"${existingLog.note}"`
-                              : "Logged — no note added."}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMealNotes((prev) => ({
-                                ...prev,
-                                [meal.key]: existingLog.note ?? "",
-                              }));
-                              qc.setQueryData(
-                                ["mealLogs", TODAY],
-                                (old: typeof todayMealLogs) =>
-                                  old?.filter((l) => l.mealType !== meal.key) ??
-                                  [],
-                              );
-                            }}
-                            className="text-xs font-body font-semibold shrink-0 px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
-                            style={{ color: meal.color }}
-                            data-ocid={`home.meals.edit_button.${i + 1}`}
-                          >
-                            ✏️
-                          </button>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs text-muted-foreground font-body flex-1 truncate">
+                              {existingLog.note
+                                ? `"${existingLog.note}"`
+                                : "Logged — no note added."}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMealNotes((prev) => ({
+                                  ...prev,
+                                  [meal.key]: existingLog.note ?? "",
+                                }));
+                                qc.setQueryData(
+                                  ["mealLogs", TODAY],
+                                  (old: typeof todayMealLogs) =>
+                                    old?.filter(
+                                      (l) => l.mealType !== meal.key,
+                                    ) ?? [],
+                                );
+                              }}
+                              className="text-xs font-body font-semibold shrink-0 px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
+                              style={{ color: meal.color }}
+                              data-ocid={`home.meals.edit_button.${i + 1}`}
+                            >
+                              ✏️
+                            </button>
+                          </div>
+                          {coachCommentMap[`meal-${TODAY}-${meal.key}`] && (
+                            <div
+                              className="flex items-start gap-1.5 px-2 py-1.5 rounded-lg"
+                              style={{
+                                background: "oklch(0.95 0.04 290)",
+                                border: "1px solid oklch(0.88 0.06 290 / 0.3)",
+                              }}
+                            >
+                              <span className="text-xs">💬</span>
+                              <p
+                                className="text-xs font-body"
+                                style={{ color: "oklch(0.35 0.12 290)" }}
+                              >
+                                <span className="font-semibold">
+                                  HN Coach:{" "}
+                                </span>
+                                {coachCommentMap[`meal-${TODAY}-${meal.key}`]}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex gap-2 items-start">
@@ -1463,6 +1536,33 @@ export default function HomeDashboard({ principal }: HomeDashboardProps) {
       </motion.div>
 
       {/* Right column: Empty (Nutrition panel is inline) */}
+
+      {/* ── CELEBRATION POPUP ── */}
+      {celebrationMsg && (
+        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50">
+          <div
+            className="px-6 py-4 rounded-2xl text-center"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.68 0.16 290), oklch(0.58 0.18 290))",
+              boxShadow: "0 8px 32px oklch(0.68 0.16 290 / 0.5)",
+              color: "white",
+              animation: "bounceIn 0.4s ease-out",
+            }}
+          >
+            <div style={{ fontSize: "2rem" }}>🎊</div>
+            <div
+              style={{
+                fontWeight: "bold",
+                fontSize: "1rem",
+                marginTop: "0.25rem",
+              }}
+            >
+              {celebrationMsg}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
